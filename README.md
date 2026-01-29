@@ -10,16 +10,19 @@
 [![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-blue.svg)](https://www.google.com/chrome/)
 [![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant)
 [![GitHub Stars](https://img.shields.io/github/stars/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant?style=social)](https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant/stargazers)
+[![Website](https://img.shields.io/badge/Website-Live-brightgreen.svg)](https://mohammad-faiz-cloud-engineer.github.io/ryco-ai-assistant/)
 
-[Features](#features) • [Installation](#installation) • [Usage](#usage) • [API Keys](#api-keys) • [Models](#supported-models) • [Contributing](#contributing)
+[🌐 Website](https://mohammad-faiz-cloud-engineer.github.io/ryco-ai-assistant/) • [Features](#features) • [Installation](#installation) • [Usage](#usage) • [API Keys](#api-keys) • [Models](#supported-models) • [Contributing](#contributing)
 
-**[Detailed Installation Guide](INSTALL.md)** | **[Changelog](CHANGELOG.md)**
+**[📖 Detailed Installation Guide](INSTALL.md)** | **[📝 Changelog](CHANGELOG.md)** | **[🌐 Official Website](https://mohammad-faiz-cloud-engineer.github.io/ryco-ai-assistant/)**
 
 </div>
 
 ---
 
 ## Quick Start
+
+**🌐 Visit our website:** [https://mohammad-faiz-cloud-engineer.github.io/ryco-ai-assistant/](https://mohammad-faiz-cloud-engineer.github.io/ryco-ai-assistant/)
 
 ```bash
 # Clone the repository
@@ -317,6 +320,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Contact & Support
 
+- **🌐 Website**: [https://mohammad-faiz-cloud-engineer.github.io/ryco-ai-assistant/](https://mohammad-faiz-cloud-engineer.github.io/ryco-ai-assistant/)
 - **Issues**: [GitHub Issues](https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant/discussions)
 - **GitHub**: [@Mohammad-Faiz-Cloud-Engineer](https://github.com/Mohammad-Faiz-Cloud-Engineer)
@@ -349,6 +353,8 @@ If you find Ryco useful, please consider giving it a star on GitHub!
 <div align="center">
 
 **Made with care by Mohammad Faiz**
+
+🌐 [Official Website](https://mohammad-faiz-cloud-engineer.github.io/ryco-ai-assistant/) | 📦 [GitHub Repository](https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant) | 📖 [Documentation](INSTALL.md)
 
 [Back to Top](#ryco---multi-llm-ai-assistant-browser-extension)
 
