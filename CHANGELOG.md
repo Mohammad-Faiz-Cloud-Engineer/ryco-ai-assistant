@@ -47,7 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - No XSS vulnerabilities (plain text only)
 - Privacy-first approach with transparent notice
 
-## [1.1.0] - 2025-01-29
+## [1.1.0] - 2026-01-29
 
 ### Added
 - Comprehensive logging for Google Gemini streaming
@@ -83,7 +83,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - SVG placeholder logo
 - Em dashes replaced with standard hyphens
 
-## [1.0.0] - 2025-01-29
+## [1.0.0] - 2026-01-29
 
 ### Added
 - Initial release of Ryco AI Assistant
