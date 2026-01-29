@@ -1,0 +1,612 @@
+/* Ryco Popup Dashboard Styles */
+/* Premium Corporate Aesthetic */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    /* Typography */
+    --ryco-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --ryco-font-size-xs: 11px;
+    --ryco-font-size-sm: 12px;
+    --ryco-font-size-base: 13px;
+    --ryco-font-size-lg: 14px;
+    --ryco-font-size-xl: 16px;
+
+    /* Spacing */
+    --ryco-space-1: 4px;
+    --ryco-space-2: 8px;
+    --ryco-space-3: 12px;
+    --ryco-space-4: 16px;
+    --ryco-space-5: 20px;
+    --ryco-space-6: 24px;
+
+    /* Border Radius */
+    --ryco-radius-sm: 6px;
+    --ryco-radius-md: 8px;
+    --ryco-radius-lg: 12px;
+
+    /* Transitions */
+    --ryco-transition-fast: 150ms ease;
+    --ryco-transition-base: 200ms ease;
+
+    /* Provider Colors */
+    --ryco-nvidia: #76b900;
+    --ryco-gemini: #4285f4;
+    --ryco-openai: #00a67e;
+}
+
+/* Dark Theme */
+body {
+    --ryco-bg-primary: #0f0f14;
+    --ryco-bg-secondary: #1a1a24;
+    --ryco-bg-tertiary: #25252f;
+    --ryco-bg-elevated: #2a2a36;
+
+    --ryco-border-subtle: rgba(255, 255, 255, 0.06);
+    --ryco-border-default: rgba(255, 255, 255, 0.1);
+    --ryco-border-strong: rgba(255, 255, 255, 0.15);
+
+    --ryco-text-primary: rgba(255, 255, 255, 0.95);
+    --ryco-text-secondary: rgba(255, 255, 255, 0.65);
+    --ryco-text-tertiary: rgba(255, 255, 255, 0.45);
+
+    --ryco-accent: #6366f1;
+    --ryco-accent-hover: #818cf8;
+    --ryco-accent-subtle: rgba(99, 102, 241, 0.15);
+
+    --ryco-success: #10b981;
+    --ryco-error: #ef4444;
+    --ryco-warning: #f59e0b;
+}
+
+/* Light Theme */
+body.light {
+    --ryco-bg-primary: #ffffff;
+    --ryco-bg-secondary: #f5f5fa;
+    --ryco-bg-tertiary: #ebebf0;
+    --ryco-bg-elevated: #ffffff;
+
+    --ryco-border-subtle: rgba(0, 0, 0, 0.05);
+    --ryco-border-default: rgba(0, 0, 0, 0.1);
+    --ryco-border-strong: rgba(0, 0, 0, 0.15);
+
+    --ryco-text-primary: rgba(0, 0, 0, 0.9);
+    --ryco-text-secondary: rgba(0, 0, 0, 0.6);
+    --ryco-text-tertiary: rgba(0, 0, 0, 0.4);
+
+    --ryco-accent: #4f46e5;
+    --ryco-accent-hover: #6366f1;
+    --ryco-accent-subtle: rgba(79, 70, 229, 0.1);
+}
+
+body {
+    font-family: var(--ryco-font-family);
+    font-size: var(--ryco-font-size-base);
+    color: var(--ryco-text-primary);
+    background: var(--ryco-bg-primary);
+    width: 380px;
+    min-height: 520px;
+    overflow-x: hidden;
+}
+
+/* ========== Header ========== */
+.ryco-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--ryco-space-4);
+    border-bottom: 1px solid var(--ryco-border-subtle);
+    background: var(--ryco-bg-secondary);
+}
+
+.ryco-logo {
+    display: flex;
+    align-items: center;
+    gap: var(--ryco-space-3);
+}
+
+.ryco-logo-icon {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, var(--ryco-accent), var(--ryco-accent-hover));
+    border-radius: var(--ryco-radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ryco-logo-icon svg {
+    width: 18px;
+    height: 18px;
+    color: white;
+}
+
+.ryco-logo-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.ryco-logo-text {
+    font-size: var(--ryco-font-size-lg);
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--ryco-text-primary);
+}
+
+.ryco-version {
+    font-size: var(--ryco-font-size-xs);
+    color: var(--ryco-text-tertiary);
+}
+
+.ryco-theme-toggle {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ryco-bg-tertiary);
+    border: 1px solid var(--ryco-border-default);
+    border-radius: var(--ryco-radius-md);
+    cursor: pointer;
+    transition: all var(--ryco-transition-fast);
+}
+
+.ryco-theme-toggle:hover {
+    background: var(--ryco-bg-elevated);
+    border-color: var(--ryco-border-strong);
+}
+
+.ryco-theme-toggle svg {
+    width: 18px;
+    height: 18px;
+    color: var(--ryco-text-secondary);
+}
+
+body .icon-dark {
+    display: none;
+}
+
+body .icon-light {
+    display: block;
+}
+
+body.light .icon-dark {
+    display: block;
+}
+
+body.light .icon-light {
+    display: none;
+}
+
+/* ========== Tabs ========== */
+.ryco-tabs {
+    display: flex;
+    gap: var(--ryco-space-1);
+    padding: var(--ryco-space-2);
+    background: var(--ryco-bg-secondary);
+    border-bottom: 1px solid var(--ryco-border-subtle);
+}
+
+.ryco-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ryco-space-2);
+    padding: var(--ryco-space-2) var(--ryco-space-3);
+    background: transparent;
+    border: none;
+    border-radius: var(--ryco-radius-sm);
+    font-family: var(--ryco-font-family);
+    font-size: var(--ryco-font-size-sm);
+    font-weight: 500;
+    color: var(--ryco-text-tertiary);
+    cursor: pointer;
+    transition: all var(--ryco-transition-fast);
+}
+
+.ryco-tab svg {
+    width: 16px;
+    height: 16px;
+}
+
+.ryco-tab:hover {
+    color: var(--ryco-text-secondary);
+    background: var(--ryco-bg-tertiary);
+}
+
+.ryco-tab.active {
+    color: var(--ryco-accent);
+    background: var(--ryco-accent-subtle);
+}
+
+/* ========== Content ========== */
+.ryco-content {
+    padding: var(--ryco-space-4);
+    overflow-y: auto;
+    max-height: 380px;
+}
+
+.ryco-panel {
+    display: none;
+}
+
+.ryco-panel.active {
+    display: block;
+}
+
+.ryco-section {
+    margin-bottom: var(--ryco-space-4);
+}
+
+.ryco-section-title {
+    font-size: var(--ryco-font-size-lg);
+    font-weight: 600;
+    color: var(--ryco-text-primary);
+    margin-bottom: var(--ryco-space-1);
+}
+
+.ryco-section-desc {
+    font-size: var(--ryco-font-size-sm);
+    color: var(--ryco-text-tertiary);
+}
+
+/* ========== Provider Cards ========== */
+.ryco-provider-card {
+    padding: var(--ryco-space-4);
+    background: var(--ryco-bg-secondary);
+    border: 1px solid var(--ryco-border-subtle);
+    border-radius: var(--ryco-radius-lg);
+    margin-bottom: var(--ryco-space-3);
+}
+
+.ryco-provider-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--ryco-space-3);
+}
+
+.ryco-provider-info {
+    display: flex;
+    align-items: center;
+    gap: var(--ryco-space-3);
+}
+
+.ryco-provider-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--ryco-radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: var(--ryco-font-size-lg);
+    color: white;
+}
+
+.ryco-provider-icon.small {
+    width: 24px;
+    height: 24px;
+    font-size: var(--ryco-font-size-sm);
+}
+
+.ryco-provider-icon.nvidia {
+    background: var(--ryco-nvidia);
+}
+
+.ryco-provider-icon.gemini {
+    background: var(--ryco-gemini);
+}
+
+.ryco-provider-icon.openai {
+    background: var(--ryco-openai);
+}
+
+.ryco-provider-info h4 {
+    font-size: var(--ryco-font-size-base);
+    font-weight: 600;
+    color: var(--ryco-text-primary);
+}
+
+.ryco-provider-url {
+    font-size: var(--ryco-font-size-xs);
+    color: var(--ryco-text-tertiary);
+}
+
+.ryco-status {
+    display: flex;
+    align-items: center;
+    gap: var(--ryco-space-1);
+    font-size: var(--ryco-font-size-xs);
+    color: var(--ryco-text-tertiary);
+}
+
+.ryco-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ryco-text-tertiary);
+}
+
+.ryco-status.connected .ryco-status-dot {
+    background: var(--ryco-success);
+}
+
+.ryco-status.error .ryco-status-dot {
+    background: var(--ryco-error);
+}
+
+.ryco-status.testing .ryco-status-dot {
+    background: var(--ryco-warning);
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.4;
+    }
+}
+
+/* ========== Input Group ========== */
+.ryco-input-group {
+    display: flex;
+    gap: var(--ryco-space-2);
+}
+
+.ryco-input {
+    flex: 1;
+    padding: var(--ryco-space-2) var(--ryco-space-3);
+    background: var(--ryco-bg-tertiary);
+    border: 1px solid var(--ryco-border-default);
+    border-radius: var(--ryco-radius-sm);
+    font-family: var(--ryco-font-family);
+    font-size: var(--ryco-font-size-sm);
+    color: var(--ryco-text-primary);
+    outline: none;
+    transition: all var(--ryco-transition-fast);
+}
+
+.ryco-input::placeholder {
+    color: var(--ryco-text-tertiary);
+}
+
+.ryco-input:focus {
+    border-color: var(--ryco-accent);
+    box-shadow: 0 0 0 3px var(--ryco-accent-subtle);
+}
+
+/* ========== Buttons ========== */
+.ryco-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ryco-space-2);
+    padding: var(--ryco-space-2) var(--ryco-space-4);
+    border: none;
+    border-radius: var(--ryco-radius-sm);
+    font-family: var(--ryco-font-family);
+    font-size: var(--ryco-font-size-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--ryco-transition-fast);
+    white-space: nowrap;
+}
+
+.ryco-btn-primary {
+    background: var(--ryco-accent);
+    color: white;
+}
+
+.ryco-btn-primary:hover {
+    background: var(--ryco-accent-hover);
+    transform: translateY(-1px);
+}
+
+.ryco-btn-secondary {
+    background: var(--ryco-bg-tertiary);
+    color: var(--ryco-text-secondary);
+    border: 1px solid var(--ryco-border-default);
+}
+
+.ryco-btn-secondary:hover {
+    background: var(--ryco-bg-elevated);
+    color: var(--ryco-text-primary);
+}
+
+.ryco-btn-full {
+    width: 100%;
+    margin-top: var(--ryco-space-3);
+}
+
+.ryco-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ========== Radio Cards ========== */
+.ryco-field {
+    margin-bottom: var(--ryco-space-4);
+}
+
+.ryco-label {
+    display: block;
+    font-size: var(--ryco-font-size-sm);
+    font-weight: 500;
+    color: var(--ryco-text-secondary);
+    margin-bottom: var(--ryco-space-2);
+}
+
+.ryco-radio-group {
+    display: flex;
+    gap: var(--ryco-space-2);
+}
+
+.ryco-radio-card {
+    flex: 1;
+    position: relative;
+    cursor: pointer;
+}
+
+.ryco-radio-card input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.ryco-radio-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ryco-space-2);
+    padding: var(--ryco-space-3);
+    background: var(--ryco-bg-secondary);
+    border: 1px solid var(--ryco-border-default);
+    border-radius: var(--ryco-radius-md);
+    font-size: var(--ryco-font-size-sm);
+    color: var(--ryco-text-secondary);
+    transition: all var(--ryco-transition-fast);
+}
+
+.ryco-radio-content svg {
+    width: 16px;
+    height: 16px;
+}
+
+.ryco-radio-card:hover .ryco-radio-content {
+    background: var(--ryco-bg-tertiary);
+}
+
+.ryco-radio-card input:checked+.ryco-radio-content {
+    background: var(--ryco-accent-subtle);
+    border-color: var(--ryco-accent);
+    color: var(--ryco-accent);
+}
+
+/* ========== Model Section ========== */
+.ryco-model-section {
+    margin-top: var(--ryco-space-4);
+}
+
+.ryco-model-card {
+    padding: var(--ryco-space-3);
+    background: var(--ryco-bg-secondary);
+    border: 1px solid var(--ryco-border-subtle);
+    border-radius: var(--ryco-radius-md);
+    margin-bottom: var(--ryco-space-2);
+}
+
+.ryco-model-card h4 {
+    font-size: var(--ryco-font-size-sm);
+    font-weight: 500;
+    color: var(--ryco-text-secondary);
+    margin-bottom: var(--ryco-space-2);
+}
+
+.ryco-select {
+    width: 100%;
+    padding: var(--ryco-space-2) var(--ryco-space-3);
+    background: var(--ryco-bg-tertiary);
+    border: 1px solid var(--ryco-border-default);
+    border-radius: var(--ryco-radius-sm);
+    font-family: var(--ryco-font-family);
+    font-size: var(--ryco-font-size-sm);
+    color: var(--ryco-text-primary);
+    outline: none;
+    cursor: pointer;
+    transition: all var(--ryco-transition-fast);
+}
+
+.ryco-select:focus {
+    border-color: var(--ryco-accent);
+}
+
+/* ========== Divider ========== */
+.ryco-divider {
+    height: 1px;
+    background: var(--ryco-border-subtle);
+    margin: var(--ryco-space-4) 0;
+}
+
+/* ========== Tips ========== */
+.ryco-tip-card {
+    display: flex;
+    gap: var(--ryco-space-3);
+    padding: var(--ryco-space-3);
+    background: var(--ryco-bg-secondary);
+    border: 1px solid var(--ryco-border-subtle);
+    border-radius: var(--ryco-radius-md);
+    margin-bottom: var(--ryco-space-2);
+}
+
+.ryco-tip-icon {
+    font-size: var(--ryco-font-size-xl);
+}
+
+.ryco-tip-content strong {
+    display: block;
+    font-size: var(--ryco-font-size-sm);
+    font-weight: 600;
+    color: var(--ryco-text-primary);
+    margin-bottom: var(--ryco-space-1);
+}
+
+.ryco-tip-content p {
+    font-size: var(--ryco-font-size-xs);
+    color: var(--ryco-text-secondary);
+    line-height: 1.5;
+}
+
+.ryco-tip-content code,
+.ryco-tip-content kbd {
+    display: inline-block;
+    padding: 2px 6px;
+    background: var(--ryco-bg-tertiary);
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: var(--ryco-font-size-xs);
+    color: var(--ryco-accent);
+}
+
+.ryco-tip-content kbd {
+    border: 1px solid var(--ryco-border-default);
+}
+
+/* ========== Footer ========== */
+.ryco-footer {
+    padding: var(--ryco-space-3);
+    text-align: center;
+    font-size: var(--ryco-font-size-xs);
+    color: var(--ryco-text-tertiary);
+    border-top: 1px solid var(--ryco-border-subtle);
+    background: var(--ryco-bg-secondary);
+}
+
+/* ========== Scrollbar ========== */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--ryco-bg-tertiary);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--ryco-border-strong);
+}

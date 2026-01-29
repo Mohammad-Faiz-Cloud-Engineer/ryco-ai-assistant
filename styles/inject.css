@@ -1,0 +1,409 @@
+/* Ryco Shadow DOM Styles */
+/* Premium Corporate Aesthetic — Injected into Shadow DOM */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ========== Command Bar ========== */
+.ryco-command-bar {
+    position: fixed;
+    z-index: var(--ryco-z-modal);
+    width: 420px;
+    max-width: calc(100vw - 32px);
+    font-family: var(--ryco-font-family);
+    animation: ryco-fade-in var(--ryco-transition-slow) ease-out;
+}
+
+.ryco-command-bar.closing {
+    animation: ryco-fade-out var(--ryco-transition-base) ease-in forwards;
+}
+
+.ryco-command-container {
+    background: var(--ryco-bg-glass);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--ryco-border-default);
+    border-radius: var(--ryco-radius-lg);
+    box-shadow: var(--ryco-shadow-md);
+    overflow: hidden;
+}
+
+/* Header */
+.ryco-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--ryco-space-3) var(--ryco-space-4);
+    border-bottom: 1px solid var(--ryco-border-subtle);
+}
+
+.ryco-header.ryco-draggable {
+    cursor: move;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.ryco-header.ryco-draggable:active {
+    cursor: grabbing;
+}
+
+.ryco-logo {
+    display: flex;
+    align-items: center;
+    gap: var(--ryco-space-2);
+}
+
+.ryco-logo-icon {
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(135deg, var(--ryco-accent), var(--ryco-accent-hover));
+    border-radius: var(--ryco-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ryco-logo-icon svg {
+    width: 12px;
+    height: 12px;
+    color: white;
+}
+
+.ryco-logo-text {
+    font-size: var(--ryco-font-size-sm);
+    font-weight: var(--ryco-font-weight-semibold);
+    color: var(--ryco-text-primary);
+    letter-spacing: 0.5px;
+}
+
+.ryco-provider-badge {
+    display: flex;
+    align-items: center;
+    gap: var(--ryco-space-1);
+    padding: var(--ryco-space-1) var(--ryco-space-2);
+    background: var(--ryco-bg-tertiary);
+    border-radius: var(--ryco-radius-full);
+    font-size: var(--ryco-font-size-xs);
+    color: var(--ryco-text-secondary);
+}
+
+.ryco-provider-badge[data-provider="nvidia"] {
+    color: var(--ryco-nvidia);
+}
+
+.ryco-provider-badge[data-provider="gemini"] {
+    color: var(--ryco-gemini);
+}
+
+.ryco-provider-badge[data-provider="openai"] {
+    color: var(--ryco-openai);
+}
+
+.ryco-provider-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+/* Content Area */
+.ryco-content {
+    padding: var(--ryco-space-4);
+}
+
+.ryco-prompt-display {
+    font-size: var(--ryco-font-size-sm);
+    color: var(--ryco-text-secondary);
+    margin-bottom: var(--ryco-space-3);
+    padding: var(--ryco-space-2) var(--ryco-space-3);
+    background: var(--ryco-bg-tertiary);
+    border-radius: var(--ryco-radius-sm);
+    border-left: 2px solid var(--ryco-accent);
+}
+
+.ryco-response-area {
+    font-size: var(--ryco-font-size-base);
+    color: var(--ryco-text-primary);
+    line-height: 1.6;
+    min-height: 40px;
+    max-height: 180px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+.ryco-response-area::-webkit-scrollbar {
+    width: 6px;
+}
+
+.ryco-response-area::-webkit-scrollbar-track {
+    background: var(--ryco-bg-tertiary);
+    border-radius: 3px;
+}
+
+.ryco-response-area::-webkit-scrollbar-thumb {
+    background: var(--ryco-border-default);
+    border-radius: 3px;
+}
+
+.ryco-response-area::-webkit-scrollbar-thumb:hover {
+    background: var(--ryco-text-tertiary);
+}
+
+/* Shimmer Loading State */
+.ryco-shimmer {
+    position: relative;
+    overflow: hidden;
+}
+
+.ryco-shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg,
+            var(--ryco-shimmer-from) 0%,
+            var(--ryco-shimmer-via) 50%,
+            var(--ryco-shimmer-to) 100%);
+    background-size: 200% 100%;
+    animation: ryco-shimmer 1.5s ease-in-out infinite;
+}
+
+.ryco-loading-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ryco-space-2);
+}
+
+.ryco-skeleton-line {
+    height: 14px;
+    background: var(--ryco-bg-tertiary);
+    border-radius: var(--ryco-radius-sm);
+}
+
+.ryco-skeleton-line:nth-child(1) {
+    width: 90%;
+}
+
+.ryco-skeleton-line:nth-child(2) {
+    width: 75%;
+}
+
+.ryco-skeleton-line:nth-child(3) {
+    width: 60%;
+}
+
+/* Streaming Cursor */
+.ryco-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    background: var(--ryco-accent);
+    margin-left: 2px;
+    animation: ryco-pulse 0.8s ease-in-out infinite;
+    vertical-align: text-bottom;
+}
+
+/* Footer / Actions */
+.ryco-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--ryco-space-2) var(--ryco-space-4);
+    background: var(--ryco-bg-secondary);
+    border-top: 1px solid var(--ryco-border-subtle);
+}
+
+.ryco-actions {
+    display: flex;
+    gap: var(--ryco-space-2);
+}
+
+.ryco-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ryco-space-1);
+    padding: var(--ryco-space-1) var(--ryco-space-3);
+    border: none;
+    border-radius: var(--ryco-radius-sm);
+    font-family: var(--ryco-font-family);
+    font-size: var(--ryco-font-size-xs);
+    font-weight: var(--ryco-font-weight-medium);
+    cursor: pointer;
+    transition: all var(--ryco-transition-fast);
+}
+
+.ryco-btn-primary {
+    background: var(--ryco-accent);
+    color: white;
+}
+
+.ryco-btn-primary:hover {
+    background: var(--ryco-accent-hover);
+    transform: translateY(-1px);
+}
+
+.ryco-btn-ghost {
+    background: transparent;
+    color: var(--ryco-text-secondary);
+}
+
+.ryco-btn-ghost:hover {
+    background: var(--ryco-bg-tertiary);
+    color: var(--ryco-text-primary);
+}
+
+.ryco-btn-ghost[data-action="cancel"]:hover {
+    background: var(--ryco-error-subtle);
+    color: var(--ryco-error);
+}
+
+.ryco-shortcut {
+    font-size: var(--ryco-font-size-xs);
+    color: var(--ryco-text-tertiary);
+}
+
+.ryco-kbd {
+    display: inline-block;
+    padding: 2px 6px;
+    background: var(--ryco-bg-tertiary);
+    border-radius: 4px;
+    font-family: var(--ryco-font-family);
+    font-size: 10px;
+    color: var(--ryco-text-secondary);
+    border: 1px solid var(--ryco-border-subtle);
+}
+
+/* ========== Toast Notifications ========== */
+.ryco-toast-container {
+    position: fixed;
+    bottom: var(--ryco-space-6);
+    right: var(--ryco-space-6);
+    z-index: var(--ryco-z-toast);
+    display: flex;
+    flex-direction: column;
+    gap: var(--ryco-space-2);
+    pointer-events: none;
+}
+
+.ryco-toast {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--ryco-space-3);
+    min-width: 300px;
+    max-width: 400px;
+    padding: var(--ryco-space-3) var(--ryco-space-4);
+    background: var(--ryco-bg-elevated);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--ryco-border-default);
+    border-radius: var(--ryco-radius-md);
+    box-shadow: var(--ryco-shadow-lg);
+    font-family: var(--ryco-font-family);
+    animation: ryco-slide-up var(--ryco-transition-slow) ease-out;
+    pointer-events: auto;
+}
+
+.ryco-toast.dismissing {
+    animation: ryco-fade-out var(--ryco-transition-base) ease-in forwards;
+}
+
+.ryco-toast-icon {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: var(--ryco-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ryco-toast-icon svg {
+    width: 12px;
+    height: 12px;
+}
+
+.ryco-toast.success .ryco-toast-icon {
+    background: var(--ryco-success-subtle);
+    color: var(--ryco-success);
+}
+
+.ryco-toast.error .ryco-toast-icon {
+    background: var(--ryco-error-subtle);
+    color: var(--ryco-error);
+}
+
+.ryco-toast.warning .ryco-toast-icon {
+    background: var(--ryco-warning-subtle);
+    color: var(--ryco-warning);
+}
+
+.ryco-toast.info .ryco-toast-icon {
+    background: var(--ryco-accent-subtle);
+    color: var(--ryco-accent);
+}
+
+.ryco-toast-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.ryco-toast-title {
+    font-size: var(--ryco-font-size-sm);
+    font-weight: var(--ryco-font-weight-semibold);
+    color: var(--ryco-text-primary);
+    margin-bottom: 2px;
+}
+
+.ryco-toast-message {
+    font-size: var(--ryco-font-size-xs);
+    color: var(--ryco-text-secondary);
+    line-height: 1.4;
+}
+
+.ryco-toast-close {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: var(--ryco-radius-sm);
+    color: var(--ryco-text-tertiary);
+    cursor: pointer;
+    transition: all var(--ryco-transition-fast);
+}
+
+.ryco-toast-close:hover {
+    background: var(--ryco-bg-tertiary);
+    color: var(--ryco-text-primary);
+}
+
+.ryco-toast-close svg {
+    width: 12px;
+    height: 12px;
+}
+
+/* ========== Utility Classes ========== */
+.ryco-hidden {
+    display: none !important;
+}
+
+.ryco-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}

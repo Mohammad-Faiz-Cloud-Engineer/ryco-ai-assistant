@@ -8,34 +8,57 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-blue.svg)](https://www.google.com/chrome/)
-[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/yourusername/ryco-ai-assistant)
+[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant)
+[![GitHub Stars](https://img.shields.io/github/stars/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant?style=social)](https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant/stargazers)
 
 [Features](#features) • [Installation](#installation) • [Usage](#usage) • [API Keys](#api-keys) • [Models](#supported-models) • [Contributing](#contributing)
+
+**[Detailed Installation Guide](INSTALL.md)** | **[Changelog](CHANGELOG.md)**
 
 </div>
 
 ---
 
-## 🌟 Overview
+## Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant.git
+
+# Load in Chrome
+1. Open chrome://extensions/
+2. Enable "Developer mode"
+3. Click "Load unpacked"
+4. Select the ryco-ai-assistant folder
+
+# Configure
+1. Click Ryco icon
+2. Add your API key (get free at build.nvidia.com)
+3. Start using: @Ryco your prompt//
+```
+
+---
+
+## Overview
 
 Ryco is a powerful browser extension that brings AI assistance to any text field on the web. Simply type `@Ryco` followed by your prompt and `//`, and get instant AI-generated responses from multiple LLM providers.
 
-Created by **Mohammad Faiz**
+Created by **Mohammad Faizal**
 
-## ✨ Features
+## Features
 
-### 🤖 Multi-Provider Support
+### Multi-Provider Support
 - **NVIDIA NIM** - 15+ models including DeepSeek-R1, Mistral Large, GPT-OSS
 - **Google Gemini** - Gemini 2.0 Flash, 1.5 Pro, 1.5 Flash
 - **OpenAI** - GPT-4o, GPT-4 Turbo, GPT-3.5 Turbo
 
-### 🌐 Universal Compatibility
+### Universal Compatibility
 - Works on **any website** with text input
 - Supports Gmail, Slack, Twitter, LinkedIn, Notion, Discord, and more
 - Compatible with standard inputs, textareas, and rich text editors
 - Detects Quill, TinyMCE, ProseMirror, Draft.js editors
 
-### 🎨 Premium UI/UX
+### Premium UI/UX
 - Draggable command bar - move it anywhere on screen
 - Real-time streaming responses
 - Dark and light themes
@@ -43,27 +66,27 @@ Created by **Mohammad Faiz**
 - Smooth animations and transitions
 - Responsive design
 
-### 🔒 Security & Privacy
+### Security & Privacy
 - AES-256 encryption for API keys
 - Secure local storage
 - No data collection
 - No external tracking
 - Your data stays between you and your chosen AI provider
 
-### ⚡ Performance
+### Performance
 - Instant trigger detection
 - Debounced input handling
 - Efficient Shadow DOM implementation
 - Minimal memory footprint
 - Fast response streaming
 
-## 📦 Installation
+## Installation
 
 ### From Source
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/ryco-ai-assistant.git
+   git clone https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant.git
    cd ryco-ai-assistant
    ```
 
@@ -80,19 +103,19 @@ Created by **Mohammad Faiz**
    - Select your preferred provider
 
 ### From Release (Coming Soon)
-Download the latest `.zip` from [Releases](https://github.com/yourusername/ryco-ai-assistant/releases) and follow step 2 above.
+Download the latest `.zip` from [Releases](https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant/releases) and follow step 2 above.
 
-## 🔑 API Keys
+## API Keys
 
 Get your free API keys from:
 
 | Provider | Get API Key | Free Tier |
 |----------|-------------|-----------|
-| **NVIDIA NIM** | [build.nvidia.com](https://build.nvidia.com) | ✅ Yes |
-| **Google Gemini** | [aistudio.google.com](https://aistudio.google.com/apikey) | ✅ Yes |
-| **OpenAI** | [platform.openai.com](https://platform.openai.com/api-keys) | ⚠️ Paid (free trial) |
+| **NVIDIA NIM** | [build.nvidia.com](https://build.nvidia.com) | Yes |
+| **Google Gemini** | [aistudio.google.com](https://aistudio.google.com/apikey) | Yes |
+| **OpenAI** | [platform.openai.com](https://platform.openai.com/api-keys) | Paid (free trial) |
 
-## 🚀 Usage
+## Usage
 
 ### Basic Usage
 
@@ -137,7 +160,7 @@ Get your free API keys from:
 - `Esc` - Cancel and close
 - Drag the header to move the command bar
 
-## 🤖 Supported Models
+## Supported Models
 
 ### NVIDIA NIM (15 Models)
 
@@ -175,7 +198,7 @@ Get your free API keys from:
 - `gpt-4-turbo` - Advanced reasoning
 - `gpt-3.5-turbo` - Fast and affordable
 
-## 🛠️ Configuration
+## Configuration
 
 ### Settings Panel
 
@@ -194,7 +217,7 @@ Access via extension icon → Settings
 - Light mode
 - Syncs across all command bars
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 ryco-ai-assistant/
@@ -214,7 +237,7 @@ ryco-ai-assistant/
 └── README.md            # This file
 ```
 
-## 🔧 Development
+## Development
 
 ### Prerequisites
 - Chrome/Edge browser
@@ -237,7 +260,7 @@ Test on various websites:
 - Notion (custom editor)
 - LinkedIn (standard input)
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please follow these steps:
 
@@ -254,11 +277,11 @@ Contributions are welcome! Please follow these steps:
 - Update documentation
 - Add comments for complex logic
 
-## 📝 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **Mohammad Faiz** - Creator and Developer
 - NVIDIA for NIM API access
@@ -266,13 +289,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - OpenAI for GPT models
 - All open-source contributors
 
-## 📧 Contact & Support
+## Contact & Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/ryco-ai-assistant/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/ryco-ai-assistant/discussions)
-- **Email**: your.email@example.com
+- **Issues**: [GitHub Issues](https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant/discussions)
+- **GitHub**: [@Mohammad-Faiz-Cloud-Engineer](https://github.com/Mohammad-Faiz-Cloud-Engineer)
 
-## 🗺️ Roadmap
+## Roadmap
 
 - [ ] Firefox extension support
 - [ ] Safari extension support
@@ -281,8 +304,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ ] Prompt templates
 - [ ] Team collaboration features
 - [ ] Chrome Web Store publication
+- [ ] Multi-language support
+- [ ] Voice input support
+- [ ] Custom keyboard shortcuts
 
-## ⭐ Star History
+## Repository Stats
+
+![GitHub repo size](https://img.shields.io/github/repo-size/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant)
+![GitHub code size](https://img.shields.io/github/languages/code-size/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant)
+![GitHub last commit](https://img.shields.io/github/last-commit/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant)
+
+## Star History
 
 If you find Ryco useful, please consider giving it a star on GitHub!
 
@@ -290,8 +322,8 @@ If you find Ryco useful, please consider giving it a star on GitHub!
 
 <div align="center">
 
-**Made with ❤️ by Mohammad Faiz**
+**Made with care by Mohammad Faizal**
 
-[⬆ Back to Top](#ryco---multi-llm-ai-assistant-browser-extension)
+[Back to Top](#ryco---multi-llm-ai-assistant-browser-extension)
 
 </div>

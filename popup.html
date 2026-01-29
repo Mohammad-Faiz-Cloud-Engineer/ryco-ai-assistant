@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ryco Settings</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/popup.css">
+</head>
+<body>
+  <div class="ryco-popup" id="app">
+    <!-- Header -->
+    <header class="ryco-header">
+      <div class="ryco-logo">
+        <div class="ryco-logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div class="ryco-logo-content">
+          <span class="ryco-logo-text">RYCO</span>
+          <span class="ryco-version">v1.0.0</span>
+        </div>
+      </div>
+      <button class="ryco-theme-toggle" id="themeToggle" title="Toggle theme">
+        <svg class="icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5"/>
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+        <svg class="icon-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+        </svg>
+      </button>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="ryco-tabs">
+      <button class="ryco-tab active" data-tab="api-keys">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+        </svg>
+        API Keys
+      </button>
+      <button class="ryco-tab" data-tab="models">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <line x1="3" y1="9" x2="21" y2="9"/>
+          <line x1="9" y1="21" x2="9" y2="9"/>
+        </svg>
+        Models
+      </button>
+      <button class="ryco-tab" data-tab="customize">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+        Customize
+      </button>
+    </nav>
+
+    <!-- Tab Content -->
+    <main class="ryco-content">
+      <!-- API Keys Tab -->
+      <section class="ryco-panel active" id="panel-api-keys">
+        <div class="ryco-section">
+          <h3 class="ryco-section-title">Provider API Keys</h3>
+          <p class="ryco-section-desc">Enter your API keys for each provider you want to use.</p>
+        </div>
+
+        <!-- NVIDIA NIM -->
+        <div class="ryco-provider-card" data-provider="nvidia">
+          <div class="ryco-provider-header">
+            <div class="ryco-provider-info">
+              <div class="ryco-provider-icon nvidia">
+                <span>N</span>
+              </div>
+              <div>
+                <h4>NVIDIA NIM</h4>
+                <span class="ryco-provider-url">integrate.api.nvidia.com</span>
+              </div>
+            </div>
+            <div class="ryco-status" id="status-nvidia">
+              <span class="ryco-status-dot"></span>
+              <span class="ryco-status-text">Not configured</span>
+            </div>
+          </div>
+          <div class="ryco-input-group">
+            <input type="password" class="ryco-input" id="key-nvidia" placeholder="Enter NVIDIA API key">
+            <button class="ryco-btn ryco-btn-secondary" data-action="test" data-provider="nvidia">
+              Test
+            </button>
+          </div>
+        </div>
+
+        <!-- Google Gemini -->
+        <div class="ryco-provider-card" data-provider="gemini">
+          <div class="ryco-provider-header">
+            <div class="ryco-provider-info">
+              <div class="ryco-provider-icon gemini">
+                <span>G</span>
+              </div>
+              <div>
+                <h4>Google Gemini</h4>
+                <span class="ryco-provider-url">generativelanguage.googleapis.com</span>
+              </div>
+            </div>
+            <div class="ryco-status" id="status-gemini">
+              <span class="ryco-status-dot"></span>
+              <span class="ryco-status-text">Not configured</span>
+            </div>
+          </div>
+          <div class="ryco-input-group">
+            <input type="password" class="ryco-input" id="key-gemini" placeholder="Enter Gemini API key">
+            <button class="ryco-btn ryco-btn-secondary" data-action="test" data-provider="gemini">
+              Test
+            </button>
+          </div>
+        </div>
+
+        <!-- OpenAI -->
+        <div class="ryco-provider-card" data-provider="openai">
+          <div class="ryco-provider-header">
+            <div class="ryco-provider-info">
+              <div class="ryco-provider-icon openai">
+                <span>O</span>
+              </div>
+              <div>
+                <h4>OpenAI</h4>
+                <span class="ryco-provider-url">api.openai.com</span>
+              </div>
+            </div>
+            <div class="ryco-status" id="status-openai">
+              <span class="ryco-status-dot"></span>
+              <span class="ryco-status-text">Not configured</span>
+            </div>
+          </div>
+          <div class="ryco-input-group">
+            <input type="password" class="ryco-input" id="key-openai" placeholder="Enter OpenAI API key">
+            <button class="ryco-btn ryco-btn-secondary" data-action="test" data-provider="openai">
+              Test
+            </button>
+          </div>
+        </div>
+
+        <button class="ryco-btn ryco-btn-primary ryco-btn-full" id="saveKeys">
+          Save All Keys
+        </button>
+      </section>
+
+      <!-- Models Tab -->
+      <section class="ryco-panel" id="panel-models">
+        <div class="ryco-section">
+          <h3 class="ryco-section-title">Model Selection</h3>
+          <p class="ryco-section-desc">Choose your default provider and preferred models.</p>
+        </div>
+
+        <div class="ryco-field">
+          <label class="ryco-label">Active Provider</label>
+          <div class="ryco-radio-group" id="providerSelect">
+            <label class="ryco-radio-card">
+              <input type="radio" name="provider" value="nvidia">
+              <span class="ryco-radio-content">
+                <span class="ryco-provider-icon nvidia small"><span>N</span></span>
+                <span>NVIDIA NIM</span>
+              </span>
+            </label>
+            <label class="ryco-radio-card">
+              <input type="radio" name="provider" value="gemini">
+              <span class="ryco-radio-content">
+                <span class="ryco-provider-icon gemini small"><span>G</span></span>
+                <span>Google Gemini</span>
+              </span>
+            </label>
+            <label class="ryco-radio-card">
+              <input type="radio" name="provider" value="openai" checked>
+              <span class="ryco-radio-content">
+                <span class="ryco-provider-icon openai small"><span>O</span></span>
+                <span>OpenAI</span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="ryco-model-section" id="modelSection">
+          <!-- Model selections will be populated dynamically -->
+        </div>
+      </section>
+
+      <!-- Customize Tab -->
+      <section class="ryco-panel" id="panel-customize">
+        <div class="ryco-section">
+          <h3 class="ryco-section-title">UI Customization</h3>
+          <p class="ryco-section-desc">Personalize how Ryco looks and feels.</p>
+        </div>
+
+        <div class="ryco-field">
+          <label class="ryco-label">Theme</label>
+          <div class="ryco-radio-group">
+            <label class="ryco-radio-card">
+              <input type="radio" name="theme" value="dark" checked>
+              <span class="ryco-radio-content">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                </svg>
+                <span>Dark</span>
+              </span>
+            </label>
+            <label class="ryco-radio-card">
+              <input type="radio" name="theme" value="light">
+              <span class="ryco-radio-content">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="5"/>
+                  <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                </svg>
+                <span>Light</span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="ryco-divider"></div>
+
+        <div class="ryco-section">
+          <h3 class="ryco-section-title">Usage Tips</h3>
+        </div>
+
+        <div class="ryco-tip-card">
+          <div class="ryco-tip-icon">💡</div>
+          <div class="ryco-tip-content">
+            <strong>Trigger Ryco</strong>
+            <p>Type <code>@Ryco</code> followed by a space and your prompt in any text field.</p>
+          </div>
+        </div>
+
+        <div class="ryco-tip-card">
+          <div class="ryco-tip-icon">⌨️</div>
+          <div class="ryco-tip-content">
+            <strong>Keyboard Shortcuts</strong>
+            <p>Press <kbd>Enter</kbd> to insert the response, <kbd>Esc</kbd> to cancel.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="ryco-footer">
+      <span>Made with ✨ for developers</span>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
