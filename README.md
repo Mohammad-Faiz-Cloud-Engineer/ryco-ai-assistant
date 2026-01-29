@@ -49,13 +49,13 @@ Ryco is a powerful browser extension that brings AI assistance to any text field
 
 **Example:** `@Ryco write a professional email//`
 
-Created by **Mohammad Faizal**
+Created by **Mohammad Faiz**
 
 ## Features
 
 ### Multi-Provider Support
 - **NVIDIA NIM** - 15+ models including DeepSeek-R1, Mistral Large, GPT-OSS
-- **Google Gemini** - Gemini 2.0 Flash, 1.5 Pro, 1.5 Flash
+- **Google Gemini** - Gemini 3 Pro Preview, Gemini 3 Flash Preview, Gemini Flash Latest
 - **OpenAI** - GPT-4o, GPT-4 Turbo, GPT-3.5 Turbo
 
 ### Universal Compatibility
@@ -210,10 +210,11 @@ Get your free API keys from:
 - `mistralai/mixtral-8x7b-instruct-v0.1` - MoE model
 - `mistralai/mixtral-8x22b-instruct-v0.1` - Large MoE
 
-### Google Gemini (3 Models)
-- `gemini-2.0-flash` - Latest, fastest
-- `gemini-1.5-pro` - Most capable
-- `gemini-1.5-flash` - Balanced
+### Google Gemini (4 Models)
+- `gemini-3-pro-preview` - Most intelligent with SOTA reasoning
+- `gemini-3-flash-preview` - Fast with frontier intelligence
+- `gemini-flash-latest` - Latest Flash model (auto-updates)
+- `gemini-flash-lite-latest` - Lightweight, cost-effective
 
 ### OpenAI (4 Models)
 - `gpt-4o` - Most capable
@@ -345,7 +346,7 @@ If you find Ryco useful, please consider giving it a star on GitHub!
 
 <div align="center">
 
-**Made with care by Mohammad Faizal**
+**Made with care by Mohammad Faiz**
 
 [Back to Top](#ryco---multi-llm-ai-assistant-browser-extension)
 

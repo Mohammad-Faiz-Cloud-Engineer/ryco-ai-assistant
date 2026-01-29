@@ -101,12 +101,13 @@ const PROVIDERS = {
   },
   gemini: {
     name: 'Google Gemini',
-    endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
-    defaultModel: 'gemini-2.0-flash',
+    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models',
+    defaultModel: 'gemini-3-flash-preview',
     models: [
-      'gemini-2.0-flash',
-      'gemini-1.5-pro',
-      'gemini-1.5-flash'
+      'gemini-3-pro-preview',
+      'gemini-3-flash-preview',
+      'gemini-flash-latest',
+      'gemini-flash-lite-latest'
     ],
     supportsStreaming: true
   },
@@ -162,7 +163,7 @@ async function getActiveModel() {
 }
 
 // ========== API Request Handler ==========
-async function sendChatRequest(prompt, tabId, streamCallback) {
+async function sendChatRequest(prompt, streamCallback) {
   const settings = await getSettings();
   const provider = PROVIDERS[settings.activeProvider];
   const apiKey = await getActiveApiKey();
@@ -171,6 +172,14 @@ async function sendChatRequest(prompt, tabId, streamCallback) {
   if (!apiKey) {
     throw new Error(`No API key configured for ${provider.name}`);
   }
+  
+  // Handle Gemini separately due to different API format
+  if (settings.activeProvider === 'gemini') {
+    return await sendGeminiRequest(prompt, model, apiKey, streamCallback);
+  }
+  
+  // OpenAI-compatible format for NVIDIA and OpenAI
+  console.log(`[${settings.activeProvider.toUpperCase()}] Sending request to:`, model);
   
   const headers = {
     'Content-Type': 'application/json',
@@ -202,7 +211,6 @@ async function sendChatRequest(prompt, tabId, streamCallback) {
       }
     ],
     stream: true,
-    max_tokens: 2048,
     temperature: 0.7
   };
   
@@ -213,8 +221,11 @@ async function sendChatRequest(prompt, tabId, streamCallback) {
       body: JSON.stringify(body)
     });
     
+    console.log(`[${settings.activeProvider.toUpperCase()}] Response status:`, response.status);
+    
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error(`[${settings.activeProvider.toUpperCase()}] Error response:`, errorData);
       throw new Error(errorData.error?.message || `API Error: ${response.status}`);
     }
     
@@ -223,10 +234,14 @@ async function sendChatRequest(prompt, tabId, streamCallback) {
     const decoder = new TextDecoder();
     let fullResponse = '';
     let buffer = '';
+    let chunkCount = 0;
     
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) {
+        console.log(`[${settings.activeProvider.toUpperCase()}] Stream complete. Total chunks:`, chunkCount);
+        break;
+      }
       
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split('\n');
@@ -241,6 +256,7 @@ async function sendChatRequest(prompt, tabId, streamCallback) {
             const parsed = JSON.parse(data);
             const content = parsed.choices?.[0]?.delta?.content;
             if (content) {
+              chunkCount++;
               fullResponse += content;
               streamCallback(content, false);
             }
@@ -251,10 +267,121 @@ async function sendChatRequest(prompt, tabId, streamCallback) {
       }
     }
     
+    console.log(`[${settings.activeProvider.toUpperCase()}] Full response length:`, fullResponse.length);
     streamCallback('', true);
     return fullResponse;
     
   } catch (error) {
+    console.error(`[${settings.activeProvider.toUpperCase()}] Request error:`, error);
+    throw error;
+  }
+}
+
+// ========== Gemini-specific Request Handler ==========
+async function sendGeminiRequest(prompt, model, apiKey, streamCallback) {
+  const systemPrompt = `You are Ryco, an AI assistant created by Mohammad Faiz.
+
+Core Behavior: Get straight to the point. Provide direct, concise answers without unnecessary introductions, preambles, or filler text. Be brief, clear, and actionable.
+
+Formatting Rules: Write in clean plain text without markdown symbols. Never use asterisks for bold (**text**), brackets for placeholders [text], or other markup syntax. Use natural punctuation and spacing instead.
+
+Professional Communication: When writing emails or business content, maintain a professional tone with proper grammar. Format naturally as a human would write, suitable for corporate environments.`;
+
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
+  
+  const body = {
+    contents: [
+      {
+        role: 'user',
+        parts: [
+          { text: systemPrompt + '\n\nUser: ' + prompt }
+        ]
+      }
+    ],
+    generationConfig: {
+      temperature: 0.7
+    }
+  };
+  
+  console.log('[Gemini] Sending request to:', model);
+  
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+    
+    console.log('[Gemini] Response status:', response.status);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('[Gemini] Error response:', errorData);
+      throw new Error(errorData.error?.message || `API Error: ${response.status}`);
+    }
+    
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let fullResponse = '';
+    let buffer = '';
+    let chunkCount = 0;
+    
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        console.log('[Gemini] Stream complete. Total chunks:', chunkCount);
+        break;
+      }
+      
+      buffer += decoder.decode(value, { stream: true });
+      
+      // Gemini SSE format: data: {...}
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6).trim();
+          if (!data) continue;
+          
+          try {
+            const parsed = JSON.parse(data);
+            const content = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (content) {
+              chunkCount++;
+              fullResponse += content;
+              streamCallback(content, false);
+            }
+          } catch (e) {
+            console.error('[Gemini] Parse error:', e, 'Line:', data.substring(0, 100));
+          }
+        }
+      }
+    }
+    
+    // Process any remaining buffer
+    if (buffer.trim() && buffer.startsWith('data: ')) {
+      try {
+        const data = buffer.slice(6).trim();
+        const parsed = JSON.parse(data);
+        const content = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (content) {
+          fullResponse += content;
+          streamCallback(content, false);
+        }
+      } catch (e) {
+        console.error('[Gemini] Final buffer parse error:', e);
+      }
+    }
+    
+    console.log('[Gemini] Full response length:', fullResponse.length);
+    streamCallback('', true);
+    return fullResponse;
+    
+  } catch (error) {
+    console.error('[Gemini] Request error:', error);
     throw error;
   }
 }
@@ -266,6 +393,39 @@ async function testConnection(provider, apiKey) {
     throw new Error(`Unknown provider: ${provider}`);
   }
   
+  console.log(`[TEST] Testing connection for ${provider}...`);
+  
+  // Handle Gemini separately
+  if (provider === 'gemini') {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${config.defaultModel}:generateContent?key=${apiKey}`;
+    const body = {
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: 'Hi' }]
+        }
+      ]
+    };
+    
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    
+    console.log(`[TEST] Gemini response status:`, response.status);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error(`[TEST] Gemini error:`, errorData);
+      throw new Error(errorData.error?.message || `Connection failed: ${response.status}`);
+    }
+    
+    console.log(`[TEST] Gemini connection successful`);
+    return { success: true, provider: config.name };
+  }
+  
+  // OpenAI-compatible format for NVIDIA and OpenAI
   const headers = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${apiKey}`
@@ -273,8 +433,7 @@ async function testConnection(provider, apiKey) {
   
   const body = {
     model: config.defaultModel,
-    messages: [{ role: 'user', content: 'Hi' }],
-    max_tokens: 5
+    messages: [{ role: 'user', content: 'Hi' }]
   };
   
   const response = await fetch(config.endpoint, {
@@ -283,11 +442,15 @@ async function testConnection(provider, apiKey) {
     body: JSON.stringify(body)
   });
   
+  console.log(`[TEST] ${provider.toUpperCase()} response status:`, response.status);
+  
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
+    console.error(`[TEST] ${provider.toUpperCase()} error:`, errorData);
     throw new Error(errorData.error?.message || `Connection failed: ${response.status}`);
   }
   
+  console.log(`[TEST] ${provider.toUpperCase()} connection successful`);
   return { success: true, provider: config.name };
 }
 
@@ -299,7 +462,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         case 'RYCO_CHAT': {
           const fullResponse = await sendChatRequest(
             message.prompt,
-            sender.tab?.id,
             (chunk, isDone) => {
               chrome.tabs.sendMessage(sender.tab.id, {
                 type: 'RYCO_STREAM_CHUNK',

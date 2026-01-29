@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Mistral Large, Mistral Small, Mixtral series
   - OpenAI GPT-OSS (120B, 20B)
   - Meta Llama 3.1 series
-  - Google Gemini 2.0 Flash, 1.5 Pro, 1.5 Flash
+  - Google Gemini 3 Pro Preview, Gemini 3 Flash Preview, Gemini Flash Latest
   - OpenAI GPT-4o, GPT-4 Turbo, GPT-3.5 Turbo
 - Universal trigger system (@Ryco prompt//)
 - Works on any website with text input
