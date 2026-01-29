@@ -461,7 +461,7 @@ If applicable, add screenshots.
 **Environment:**
 - Browser: [e.g. Chrome 120]
 - OS: [e.g. Windows 11]
-- Ryco Version: [e.g. 1.0.0]
+- Ryco Version: [e.g. 1.1.0]
 - Website: [e.g. gmail.com]
 \`\`\`
 
@@ -573,6 +573,25 @@ Thank you for contributing to Ryco!`,
 
 All notable changes to Ryco will be documented in this file.
 
+## [1.1.0] - 2025-01-29
+
+### Added
+- Comprehensive logging for Google Gemini streaming
+- Real Ryco logo integration in command bar
+- Performance metrics tracking
+- Safety settings for Gemini API
+
+### Fixed
+- Google Gemini streaming response issues
+- SSE event parsing with proper buffer management
+- Logo display in command bar
+
+### Improved
+- Performance optimizations
+- Memory efficiency
+- Error handling
+- Code quality to production-grade standards
+
 ## [1.0.0] - 2025-01-29
 
 ### Added
@@ -630,6 +649,7 @@ All notable changes to Ryco will be documented in this file.
 
 ---
 
+[1.1.0]: https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant/releases/tag/v1.1.0
 [1.0.0]: https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant/releases/tag/v1.0.0`
 };
 
