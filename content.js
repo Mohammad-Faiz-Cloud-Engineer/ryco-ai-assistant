@@ -102,7 +102,7 @@
 
     // ========== Icons ==========
     const ICONS = {
-        logo: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>`,
+        logo: null, // Will use image instead
         success: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>`,
         error: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
         warning: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
@@ -244,7 +244,7 @@
       <div class="ryco-command-container">
         <header class="ryco-header ryco-draggable">
           <div class="ryco-logo">
-            <div class="ryco-logo-icon">${ICONS.logo}</div>
+            <img src="${chrome.runtime.getURL('icons/icon-48.png')}" alt="Ryco" class="ryco-logo-icon-img">
             <span class="ryco-logo-text">RYCO</span>
           </div>
           <div class="ryco-provider-badge" data-provider="${providerKey}">
