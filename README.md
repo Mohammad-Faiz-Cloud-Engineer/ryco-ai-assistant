@@ -34,14 +34,20 @@ git clone https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant.git
 # Configure
 1. Click Ryco icon
 2. Add your API key (get free at build.nvidia.com)
-3. Start using: @Ryco your prompt//
+3. Start using: @Ryco [your prompt]//
 ```
+
+**Note:** Always end your prompt with double slashes `//` to trigger the AI response.
 
 ---
 
 ## Overview
 
 Ryco is a powerful browser extension that brings AI assistance to any text field on the web. Simply type `@Ryco` followed by your prompt and `//`, and get instant AI-generated responses from multiple LLM providers.
+
+**Trigger Format:** `@Ryco [your prompt here]//`
+
+**Example:** `@Ryco write a professional email//`
 
 Created by **Mohammad Faizal**
 
@@ -119,9 +125,16 @@ Get your free API keys from:
 
 ### Basic Usage
 
+**Trigger Format:**
+```
+@Ryco [your prompt here]//
+```
+
+**Important:** The trigger must end with double slashes `//`
+
 1. Click on any text field on any website
 2. Type: `@Ryco your prompt here//`
-3. Wait for the AI response to appear
+3. Wait for the AI response to appear in the command bar
 4. Choose an action:
    - **Insert** - Add response to text field
    - **Copy** - Copy to clipboard
@@ -152,6 +165,16 @@ Get your free API keys from:
 **Summarization**
 ```
 @Ryco summarize this article in 3 bullet points: [paste article]//
+```
+
+**Business Writing**
+```
+@Ryco draft a meeting agenda for project kickoff//
+```
+
+**Quick Answers**
+```
+@Ryco what is the capital of France//
 ```
 
 ### Keyboard Shortcuts
