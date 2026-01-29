@@ -15,7 +15,7 @@
         <img src="icons/icon-48.png" alt="Ryco Logo" class="ryco-logo-image">
         <div class="ryco-logo-content">
           <span class="ryco-logo-text">RYCO</span>
-          <span class="ryco-version">v1.1.0</span>
+          <span class="ryco-version">v1.2.0</span>
         </div>
       </div>
       <button class="ryco-theme-toggle" id="themeToggle" title="Toggle theme">
@@ -36,6 +36,13 @@
           <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
         </svg>
         API Keys
+      </button>
+      <button class="ryco-tab" data-tab="user-details">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        User Details
       </button>
       <button class="ryco-tab" data-tab="models">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -140,6 +147,132 @@
 
         <button class="ryco-btn ryco-btn-primary ryco-btn-full" id="saveKeys">
           Save All Keys
+        </button>
+      </section>
+
+      <!-- User Details Tab -->
+      <section class="ryco-panel" id="panel-user-details">
+        <div class="ryco-section">
+          <h3 class="ryco-section-title">User Profile</h3>
+          <p class="ryco-section-desc">Provide your details to help AI generate more personalized and accurate responses.</p>
+        </div>
+
+        <!-- Personal Information -->
+        <div class="ryco-field-group">
+          <h4 class="ryco-field-group-title">Personal Information</h4>
+          
+          <div class="ryco-field">
+            <label class="ryco-label" for="user-name">Full Name</label>
+            <input type="text" class="ryco-input" id="user-name" placeholder="e.g., Mohammad Faiz">
+          </div>
+
+          <div class="ryco-field">
+            <label class="ryco-label" for="user-role">Job Title / Role</label>
+            <input type="text" class="ryco-input" id="user-role" placeholder="e.g., Software Engineer, Marketing Manager">
+          </div>
+
+          <div class="ryco-field">
+            <label class="ryco-label" for="user-company">Company / Organization</label>
+            <input type="text" class="ryco-input" id="user-company" placeholder="e.g., Tech Corp, Freelance">
+          </div>
+
+          <div class="ryco-field">
+            <label class="ryco-label" for="user-industry">Industry</label>
+            <input type="text" class="ryco-input" id="user-industry" placeholder="e.g., Technology, Healthcare, Finance">
+          </div>
+        </div>
+
+        <!-- Professional Details -->
+        <div class="ryco-field-group">
+          <h4 class="ryco-field-group-title">Professional Details</h4>
+          
+          <div class="ryco-field">
+            <label class="ryco-label" for="user-experience">Years of Experience</label>
+            <select class="ryco-select" id="user-experience">
+              <option value="">Select experience level</option>
+              <option value="0-2">0-2 years (Entry Level)</option>
+              <option value="3-5">3-5 years (Mid Level)</option>
+              <option value="6-10">6-10 years (Senior Level)</option>
+              <option value="10+">10+ years (Expert Level)</option>
+            </select>
+          </div>
+
+          <div class="ryco-field">
+            <label class="ryco-label" for="user-skills">Key Skills / Expertise</label>
+            <input type="text" class="ryco-input" id="user-skills" placeholder="e.g., Python, Marketing, Design, Project Management">
+            <span class="ryco-field-hint">Separate multiple skills with commas</span>
+          </div>
+
+          <div class="ryco-field">
+            <label class="ryco-label" for="user-goals">Professional Goals</label>
+            <textarea class="ryco-textarea" id="user-goals" rows="3" placeholder="e.g., Learn new technologies, improve productivity, grow business"></textarea>
+          </div>
+        </div>
+
+        <!-- Communication Preferences -->
+        <div class="ryco-field-group">
+          <h4 class="ryco-field-group-title">Communication Preferences</h4>
+          
+          <div class="ryco-field">
+            <label class="ryco-label" for="user-tone">Preferred Tone</label>
+            <select class="ryco-select" id="user-tone">
+              <option value="">Select tone</option>
+              <option value="professional">Professional & Formal</option>
+              <option value="casual">Casual & Friendly</option>
+              <option value="technical">Technical & Detailed</option>
+              <option value="concise">Concise & Direct</option>
+            </select>
+          </div>
+
+          <div class="ryco-field">
+            <label class="ryco-label" for="user-language">Primary Language</label>
+            <select class="ryco-select" id="user-language">
+              <option value="English">English</option>
+              <option value="Spanish">Spanish</option>
+              <option value="French">French</option>
+              <option value="German">German</option>
+              <option value="Chinese">Chinese</option>
+              <option value="Japanese">Japanese</option>
+              <option value="Hindi">Hindi</option>
+              <option value="Arabic">Arabic</option>
+              <option value="Portuguese">Portuguese</option>
+              <option value="Russian">Russian</option>
+            </select>
+          </div>
+
+          <div class="ryco-field">
+            <label class="ryco-label" for="user-timezone">Timezone</label>
+            <input type="text" class="ryco-input" id="user-timezone" placeholder="e.g., EST, PST, GMT+5:30">
+          </div>
+        </div>
+
+        <!-- Additional Context -->
+        <div class="ryco-field-group">
+          <h4 class="ryco-field-group-title">Additional Context</h4>
+          
+          <div class="ryco-field">
+            <label class="ryco-label" for="user-context">Custom Context / Notes</label>
+            <textarea class="ryco-textarea" id="user-context" rows="4" placeholder="Add any additional information that would help AI understand your needs better..."></textarea>
+            <span class="ryco-field-hint">This information will be included in every AI request as context</span>
+          </div>
+        </div>
+
+        <div class="ryco-divider"></div>
+
+        <div class="ryco-info-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="16" x2="12" y2="12"/>
+            <line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          <div>
+            <strong>Privacy Notice</strong>
+            <p>Your information is stored locally on your device and is never sent to external servers. It's only used to enhance AI responses only for you.</p>
+          </div>
+        </div>
+
+        <button class="ryco-btn ryco-btn-primary ryco-btn-full" id="saveUserDetails">
+          Save User Details
         </button>
       </section>
 

@@ -600,3 +600,85 @@ body.light .icon-light {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--ryco-border-strong);
 }
+
+/* ========== User Details Tab ========== */
+.ryco-field-group {
+    margin-bottom: var(--ryco-space-5);
+    padding: var(--ryco-space-4);
+    background: var(--ryco-bg-secondary);
+    border: 1px solid var(--ryco-border-subtle);
+    border-radius: var(--ryco-radius-lg);
+}
+
+.ryco-field-group-title {
+    font-size: var(--ryco-font-size-base);
+    font-weight: 600;
+    color: var(--ryco-text-primary);
+    margin-bottom: var(--ryco-space-3);
+    padding-bottom: var(--ryco-space-2);
+    border-bottom: 1px solid var(--ryco-border-subtle);
+}
+
+.ryco-textarea {
+    width: 100%;
+    padding: var(--ryco-space-2) var(--ryco-space-3);
+    background: var(--ryco-bg-tertiary);
+    border: 1px solid var(--ryco-border-default);
+    border-radius: var(--ryco-radius-sm);
+    font-family: var(--ryco-font-family);
+    font-size: var(--ryco-font-size-sm);
+    color: var(--ryco-text-primary);
+    outline: none;
+    transition: all var(--ryco-transition-fast);
+    resize: vertical;
+    min-height: 60px;
+}
+
+.ryco-textarea::placeholder {
+    color: var(--ryco-text-tertiary);
+}
+
+.ryco-textarea:focus {
+    border-color: var(--ryco-accent);
+    box-shadow: 0 0 0 3px var(--ryco-accent-subtle);
+}
+
+.ryco-field-hint {
+    display: block;
+    font-size: var(--ryco-font-size-xs);
+    color: var(--ryco-text-tertiary);
+    margin-top: var(--ryco-space-1);
+}
+
+.ryco-info-box {
+    display: flex;
+    gap: var(--ryco-space-3);
+    padding: var(--ryco-space-3);
+    background: var(--ryco-accent-subtle);
+    border: 1px solid var(--ryco-accent);
+    border-radius: var(--ryco-radius-md);
+    margin-bottom: var(--ryco-space-4);
+}
+
+.ryco-info-box svg {
+    width: 20px;
+    height: 20px;
+    color: var(--ryco-accent);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.ryco-info-box strong {
+    display: block;
+    font-size: var(--ryco-font-size-sm);
+    font-weight: 600;
+    color: var(--ryco-text-primary);
+    margin-bottom: var(--ryco-space-1);
+}
+
+.ryco-info-box p {
+    font-size: var(--ryco-font-size-xs);
+    color: var(--ryco-text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}

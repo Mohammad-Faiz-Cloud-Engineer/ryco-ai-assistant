@@ -8,7 +8,20 @@ let settings = {
     activeProvider: 'openai',
     selectedModels: {},
     theme: 'dark',
-    apiKeys: {}
+    apiKeys: {},
+    userDetails: {
+        name: '',
+        role: '',
+        company: '',
+        industry: '',
+        experience: '',
+        skills: '',
+        goals: '',
+        tone: '',
+        language: 'English',
+        timezone: '',
+        context: ''
+    }
 };
 
 let providers = {};
@@ -18,6 +31,7 @@ const elements = {
     app: document.getElementById('app'),
     themeToggle: document.getElementById('themeToggle'),
     saveKeys: document.getElementById('saveKeys'),
+    saveUserDetails: document.getElementById('saveUserDetails'),
     providerSelect: document.getElementById('providerSelect'),
     modelSection: document.getElementById('modelSection'),
     tabs: document.querySelectorAll('.ryco-tab'),
@@ -58,12 +72,46 @@ async function loadSettings() {
             // Set theme radio
             const themeRadio = document.querySelector(`input[name="theme"][value="${settings.theme}"]`);
             if (themeRadio) themeRadio.checked = true;
+
+            // Load user details
+            loadUserDetails();
         } else {
             throw new Error(response?.error || 'Failed to load settings');
         }
     } catch (e) {
         console.error('[Ryco] Failed to load settings:', e);
         throw e;
+    }
+}
+
+function loadUserDetails() {
+    if (!settings.userDetails) {
+        settings.userDetails = {
+            name: '', role: '', company: '', industry: '',
+            experience: '', skills: '', goals: '', tone: '',
+            language: 'English', timezone: '', context: ''
+        };
+    }
+
+    const fields = {
+        'user-name': 'name',
+        'user-role': 'role',
+        'user-company': 'company',
+        'user-industry': 'industry',
+        'user-experience': 'experience',
+        'user-skills': 'skills',
+        'user-goals': 'goals',
+        'user-tone': 'tone',
+        'user-language': 'language',
+        'user-timezone': 'timezone',
+        'user-context': 'context'
+    };
+
+    for (const [elementId, settingKey] of Object.entries(fields)) {
+        const element = document.getElementById(elementId);
+        if (element && settings.userDetails[settingKey]) {
+            element.value = settings.userDetails[settingKey];
+        }
     }
 }
 
@@ -109,6 +157,9 @@ function setupEventListeners() {
 
     // Save all keys
     elements.saveKeys.addEventListener('click', saveAllKeys);
+
+    // Save user details
+    elements.saveUserDetails.addEventListener('click', saveUserDetails);
 }
 
 // ========== Tab Switching ==========
@@ -292,6 +343,48 @@ async function saveSettings(partial) {
         });
     } catch (error) {
         console.error('Failed to save settings:', error);
+    }
+}
+
+// ========== User Details Management ==========
+async function saveUserDetails() {
+    const btn = elements.saveUserDetails;
+    if (!btn) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    try {
+        const userDetails = {
+            name: document.getElementById('user-name')?.value.trim() || '',
+            role: document.getElementById('user-role')?.value.trim() || '',
+            company: document.getElementById('user-company')?.value.trim() || '',
+            industry: document.getElementById('user-industry')?.value.trim() || '',
+            experience: document.getElementById('user-experience')?.value || '',
+            skills: document.getElementById('user-skills')?.value.trim() || '',
+            goals: document.getElementById('user-goals')?.value.trim() || '',
+            tone: document.getElementById('user-tone')?.value || '',
+            language: document.getElementById('user-language')?.value || 'English',
+            timezone: document.getElementById('user-timezone')?.value.trim() || '',
+            context: document.getElementById('user-context')?.value.trim() || ''
+        };
+
+        settings.userDetails = userDetails;
+        await saveSettings({ userDetails });
+
+        btn.textContent = 'Saved Successfully!';
+        setTimeout(() => {
+            btn.textContent = 'Save User Details';
+            btn.disabled = false;
+        }, 2000);
+
+    } catch (error) {
+        console.error('[Ryco] Save user details error:', error);
+        btn.textContent = 'Error saving';
+        setTimeout(() => {
+            btn.textContent = 'Save User Details';
+            btn.disabled = false;
+        }, 2000);
     }
 }
 

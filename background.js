@@ -131,14 +131,16 @@ async function getSettings() {
     'activeProvider',
     'selectedModels',
     'theme',
-    'apiKeys'
+    'apiKeys',
+    'userDetails'
   ]);
   
   return {
     activeProvider: result.activeProvider || 'openai',
     selectedModels: result.selectedModels || {},
     theme: result.theme || 'dark',
-    apiKeys: result.apiKeys || {}
+    apiKeys: result.apiKeys || {},
+    userDetails: result.userDetails || {}
   };
 }
 
@@ -162,6 +164,29 @@ async function getActiveModel() {
   return settings.selectedModels[settings.activeProvider] || provider.defaultModel;
 }
 
+// ========== User Context Builder ==========
+function buildUserContext(userDetails) {
+  if (!userDetails || Object.keys(userDetails).length === 0) return '';
+  
+  const parts = [];
+  
+  if (userDetails.name) parts.push(`Name: ${userDetails.name}`);
+  if (userDetails.role) parts.push(`Role: ${userDetails.role}`);
+  if (userDetails.company) parts.push(`Company: ${userDetails.company}`);
+  if (userDetails.industry) parts.push(`Industry: ${userDetails.industry}`);
+  if (userDetails.experience) parts.push(`Experience: ${userDetails.experience}`);
+  if (userDetails.skills) parts.push(`Skills: ${userDetails.skills}`);
+  if (userDetails.goals) parts.push(`Goals: ${userDetails.goals}`);
+  if (userDetails.tone) parts.push(`Preferred tone: ${userDetails.tone}`);
+  if (userDetails.language) parts.push(`Language: ${userDetails.language}`);
+  if (userDetails.timezone) parts.push(`Timezone: ${userDetails.timezone}`);
+  if (userDetails.context) parts.push(`Additional context: ${userDetails.context}`);
+  
+  if (parts.length === 0) return '';
+  
+  return `User Profile: ${parts.join(', ')}.`;
+}
+
 // ========== API Request Handler ==========
 async function sendChatRequest(prompt, streamCallback) {
   const settings = await getSettings();
@@ -173,9 +198,12 @@ async function sendChatRequest(prompt, streamCallback) {
     throw new Error(`No API key configured for ${provider.name}`);
   }
   
+  // Build user context
+  const userContext = buildUserContext(settings.userDetails);
+  
   // Handle Gemini separately due to different API format
   if (settings.activeProvider === 'gemini') {
-    return await sendGeminiRequest(prompt, model, apiKey, streamCallback);
+    return await sendGeminiRequest(prompt, model, apiKey, streamCallback, userContext);
   }
   
   // OpenAI-compatible format for NVIDIA and OpenAI
@@ -186,22 +214,32 @@ async function sendChatRequest(prompt, streamCallback) {
     'Authorization': `Bearer ${apiKey}`
   };
   
+  const messages = [
+    {
+      role: 'system',
+      content: 'You are Ryco by Mohammad Faiz. Be extremely concise and direct. No introductions, no preambles, no filler. Get straight to the answer immediately. Keep responses brief and actionable.'
+    },
+    {
+      role: 'system',
+      content: 'Format: Plain text only. No markdown, no asterisks, no brackets, no symbols. Write naturally like a human. For emails/business content, be professional but concise.'
+    }
+  ];
+  
+  if (userContext) {
+    messages.push({
+      role: 'system',
+      content: userContext
+    });
+  }
+  
+  messages.push({
+    role: 'user',
+    content: prompt
+  });
+  
   const body = {
     model: model,
-    messages: [
-      {
-        role: 'system',
-        content: 'You are Ryco by Mohammad Faiz. Be extremely concise and direct. No introductions, no preambles, no filler. Get straight to the answer immediately. Keep responses brief and actionable.'
-      },
-      {
-        role: 'system',
-        content: 'Format: Plain text only. No markdown, no asterisks, no brackets, no symbols. Write naturally like a human. For emails/business content, be professional but concise.'
-      },
-      {
-        role: 'user',
-        content: prompt
-      }
-    ],
+    messages: messages,
     stream: true,
     temperature: 0.5
   };
@@ -275,8 +313,12 @@ async function sendChatRequest(prompt, streamCallback) {
 }
 
 // ========== Gemini-specific Request Handler ==========
-async function sendGeminiRequest(prompt, model, apiKey, streamCallback) {
-  const systemPrompt = `You are Ryco by Mohammad Faiz. Be extremely concise and direct. No introductions, no preambles, no filler. Get straight to the answer immediately. Keep responses brief and actionable. Format: Plain text only. No markdown, no asterisks, no brackets, no symbols. Write naturally like a human. For emails/business content, be professional but concise.`;
+async function sendGeminiRequest(prompt, model, apiKey, streamCallback, userContext = '') {
+  let systemPrompt = `You are Ryco by Mohammad Faiz. Be extremely concise and direct. No introductions, no preambles, no filler. Get straight to the answer immediately. Keep responses brief and actionable. Format: Plain text only. No markdown, no asterisks, no brackets, no symbols. Write naturally like a human. For emails/business content, be professional but concise.`;
+  
+  if (userContext) {
+    systemPrompt += ` ${userContext}`;
+  }
 
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
   
@@ -292,7 +334,25 @@ async function sendGeminiRequest(prompt, model, apiKey, streamCallback) {
     generationConfig: {
       temperature: 0.5,
       candidateCount: 1
-    }
+    },
+    safetySettings: [
+      {
+        category: 'HARM_CATEGORY_HARASSMENT',
+        threshold: 'BLOCK_NONE'
+      },
+      {
+        category: 'HARM_CATEGORY_HATE_SPEECH',
+        threshold: 'BLOCK_NONE'
+      },
+      {
+        category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+        threshold: 'BLOCK_NONE'
+      },
+      {
+        category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+        threshold: 'BLOCK_NONE'
+      }
+    ]
   };
   
   console.log('[Gemini] Sending request to:', model);
@@ -515,7 +575,8 @@ chrome.runtime.onInstalled.addListener(async (details) => {
       activeProvider: 'openai',
       selectedModels: {},
       theme: 'dark',
-      apiKeys: {}
+      apiKeys: {},
+      userDetails: {}
     });
     
     console.log('Ryco installed successfully');

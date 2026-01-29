@@ -5,6 +5,48 @@ All notable changes to Ryco will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-01-29
+
+### Added
+- **User Details Tab** - Comprehensive profile management in extension popup
+- Personal information fields (name, role, company, industry)
+- Professional details (experience level, skills, goals)
+- Communication preferences (tone, language, timezone)
+- Custom context field for additional user notes
+- Privacy notice explaining local-only storage
+- User context integration in all AI requests
+- Smart context builder (only includes filled fields)
+- Gemini API safety settings to prevent content blocking
+- Production-grade form validation and error handling
+
+### Fixed
+- **Critical:** Google Gemini safety settings (prevents response blocking)
+- Gemini streaming now includes all 4 safety categories with BLOCK_NONE
+- User profile data persistence across sessions
+- Form field loading and saving with proper async handling
+
+### Changed
+- User context automatically prepended to system prompts
+- All providers (NVIDIA, Gemini, OpenAI) now receive user context
+- Enhanced Gemini request handler with user context parameter
+- Settings storage now includes userDetails object
+- Extension initialization includes userDetails default
+
+### Improved
+- AI responses now personalized based on user profile
+- Context-aware suggestions matching user preferences
+- Tone matching user's selected communication style
+- Language-appropriate responses
+- Industry-specific recommendations
+- Better error feedback in popup UI
+- Form UX with organized field groups and helpful placeholders
+
+### Security
+- All user data stored locally (never sent to external servers)
+- Input sanitization with .trim() on all text fields
+- No XSS vulnerabilities (plain text only)
+- Privacy-first approach with transparent notice
+
 ## [1.1.0] - 2025-01-29
 
 ### Added
