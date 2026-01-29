@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ryco - Premium AI assistant browser extension that works anywhere on the web. Multi-provider support for NVIDIA NIM, Google Gemini, and OpenAI.">
+    <meta name="keywords" content="AI assistant, browser extension, NVIDIA NIM, Google Gemini, OpenAI, productivity">
+    <meta name="author" content="Mohammad Faiz">
+    <title>Ryco - Multi-LLM AI Assistant Browser Extension</title>
+    <link rel="icon" type="image/png" href="../icons/icon-48.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <img src="../icons/icon-48.png" alt="Ryco Logo" class="nav-logo">
+                <span class="nav-title">RYCO</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#models">Models</a></li>
+                <li><a href="#installation">Installation</a></li>
+                <li><a href="#docs">Documentation</a></li>
+                <li><a href="#download" class="nav-cta">Download</a></li>
+            </ul>
+            <button class="mobile-menu-toggle" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">v1.0.0 - Now Available</div>
+                <h1 class="hero-title">Premium AI Assistant<br>For Your Browser</h1>
+                <p class="hero-subtitle">Seamlessly integrate AI into any text field across the web. Multi-provider support with 20+ models.</p>
+                <div class="hero-actions">
+                    <button class="btn btn-primary" onclick="showDownloadModal()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                        </svg>
+                        Download Now
+                    </button>
+                    <a href="https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant" class="btn btn-secondary" target="_blank">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                        </svg>
+                        View on GitHub
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <div class="stat-value">20+</div>
+                        <div class="stat-label">AI Models</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">3</div>
+                        <div class="stat-label">Providers</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">100%</div>
+                        <div class="stat-label">Free & Open Source</div>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="demo-window">
+                    <div class="demo-header">
+                        <span class="demo-dot"></span>
+                        <span class="demo-dot"></span>
+                        <span class="demo-dot"></span>
+                    </div>
+                    <div class="demo-content">
+                        <div class="demo-input">@Ryco write a professional email//</div>
+                        <div class="demo-output">
+                            <div class="typing-indicator">
+                                <span></span><span></span><span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Powerful Features</h2>
+                <p>Everything you need for AI-powered productivity</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                            <path d="M2 17l10 5 10-5"/>
+                            <path d="M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <h3>Multi-Provider Support</h3>
+                    <p>Choose from NVIDIA NIM, Google Gemini, or OpenAI. Switch providers seamlessly based on your needs.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 6v6l4 2"/>
+                        </svg>
+                    </div>
+                    <h3>Real-Time Streaming</h3>
+                    <p>Get instant responses with streaming technology. See AI generate text in real-time as you wait.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0110 0v4"/>
+                        </svg>
+                    </div>
+                    <h3>Enterprise Security</h3>
+                    <p>AES-256 encryption for API keys. Your data stays private with no external tracking or collection.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                            <line x1="12" y1="22.08" x2="12" y2="12"/>
+                        </svg>
+                    </div>
+                    <h3>Universal Compatibility</h3>
+                    <p>Works on any website with text input. Gmail, Slack, Twitter, LinkedIn, Notion, Discord, and more.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+                        </svg>
+                    </div>
+                    <h3>Free Tier Available</h3>
+                    <p>Get started with free API access from NVIDIA NIM and Google Gemini. No credit card required.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                        </svg>
+                    </div>
+                    <h3>Dark & Light Themes</h3>
+                    <p>Beautiful interface with dark and light modes. Professional design that matches your workflow.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Models Section -->
+    <section id="models" class="models">
+        <div class="container">
+            <div class="section-header">
+                <h2>20+ AI Models</h2>
+                <p>Access the latest and most powerful language models</p>
+            </div>
+            <div class="models-grid">
+                <div class="model-provider">
+                    <div class="provider-header nvidia">
+                        <div class="provider-icon">N</div>
+                        <div>
+                            <h3>NVIDIA NIM</h3>
+                            <span class="provider-count">15 Models</span>
+                        </div>
+                    </div>
+                    <ul class="model-list">
+                        <li><strong>DeepSeek-R1</strong> - 671B reasoning model</li>
+                        <li><strong>DeepSeek-V3 Series</strong> - Latest hybrid AI</li>
+                        <li><strong>Mistral Large</strong> - 675B flagship model</li>
+                        <li><strong>GPT-OSS</strong> - 120B open source</li>
+                        <li><strong>Llama 3.1</strong> - 405B instruct model</li>
+                        <li><strong>Mixtral 8x22B</strong> - Large MoE model</li>
+                    </ul>
+                </div>
+                <div class="model-provider">
+                    <div class="provider-header gemini">
+                        <div class="provider-icon">G</div>
+                        <div>
+                            <h3>Google Gemini</h3>
+                            <span class="provider-count">4 Models</span>
+                        </div>
+                    </div>
+                    <ul class="model-list">
+                        <li><strong>Gemini 3 Pro Preview</strong> - SOTA reasoning</li>
+                        <li><strong>Gemini 3 Flash Preview</strong> - Fast intelligence</li>
+                        <li><strong>Gemini Flash Latest</strong> - Auto-updates</li>
+                        <li><strong>Gemini Flash Lite</strong> - Cost-effective</li>
+                    </ul>
+                </div>
+                <div class="model-provider">
+                    <div class="provider-header openai">
+                        <div class="provider-icon">O</div>
+                        <div>
+                            <h3>OpenAI</h3>
+                            <span class="provider-count">4 Models</span>
+                        </div>
+                    </div>
+                    <ul class="model-list">
+                        <li><strong>GPT-4o</strong> - Most capable model</li>
+                        <li><strong>GPT-4o Mini</strong> - Fast and efficient</li>
+                        <li><strong>GPT-4 Turbo</strong> - Advanced reasoning</li>
+                        <li><strong>GPT-3.5 Turbo</strong> - Fast and affordable</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <h2>How It Works</h2>
+                <p>Get started in three simple steps</p>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Install Extension</h3>
+                    <p>Download and load the extension in your Chrome, Edge, or Brave browser.</p>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Configure API Key</h3>
+                    <p>Add your API key from NVIDIA NIM, Google Gemini, or OpenAI.</p>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Start Using</h3>
+                    <p>Type @Ryco followed by your prompt and // in any text field.</p>
+                </div>
+            </div>
+            <div class="usage-example">
+                <div class="example-header">Example Usage</div>
+                <div class="example-code">
+                    <code>@Ryco write a professional leave request email for tomorrow//</code>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Installation Section -->
+    <section id="installation" class="installation">
+        <div class="container">
+            <div class="section-header">
+                <h2>Installation Guide</h2>
+                <p>Quick and easy setup in minutes</p>
+            </div>
+            <div class="install-tabs">
+                <button class="install-tab active" data-tab="chrome">Chrome / Edge / Brave</button>
+                <button class="install-tab" data-tab="source">From Source</button>
+            </div>
+            <div class="install-content">
+                <div class="install-panel active" id="chrome-panel">
+                    <ol class="install-steps">
+                        <li>Download the extension from the releases section</li>
+                        <li>Open <code>chrome://extensions/</code> in your browser</li>
+                        <li>Enable "Developer mode" (toggle in top-right)</li>
+                        <li>Click "Load unpacked" and select the extracted folder</li>
+                        <li>Click the Ryco icon and configure your API keys</li>
+                    </ol>
+                </div>
+                <div class="install-panel" id="source-panel">
+                    <div class="code-block">
+                        <pre><code># Clone the repository
+git clone https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant.git
+cd ryco-ai-assistant
+
+# Load in browser
+1. Open chrome://extensions/
+2. Enable "Developer mode"
+3. Click "Load unpacked"
+4. Select the ryco-ai-assistant folder</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Documentation Section -->
+    <section id="docs" class="documentation">
+        <div class="container">
+            <div class="section-header">
+                <h2>Documentation</h2>
+                <p>Everything you need to know</p>
+            </div>
+            <div class="docs-grid">
+                <a href="#" class="doc-card" onclick="showDocModal('readme'); return false;">
+                    <div class="doc-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                            <polyline points="10 9 9 9 8 9"/>
+                        </svg>
+                    </div>
+                    <h3>README</h3>
+                    <p>Complete overview, features, and usage examples</p>
+                </a>
+                <a href="#" class="doc-card" onclick="showDocModal('install'); return false;">
+                    <div class="doc-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                    </div>
+                    <h3>Installation</h3>
+                    <p>Detailed installation and setup instructions</p>
+                </a>
+                <a href="#" class="doc-card" onclick="showDocModal('contributing'); return false;">
+                    <div class="doc-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 010 7.75"/>
+                        </svg>
+                    </div>
+                    <h3>Contributing</h3>
+                    <p>Guidelines for contributing to the project</p>
+                </a>
+                <a href="#" class="doc-card" onclick="showDocModal('changelog'); return false;">
+                    <div class="doc-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                    </div>
+                    <h3>Changelog</h3>
+                    <p>Version history and release notes</p>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <h2>Ready to boost your productivity?</h2>
+            <p>Download Ryco and experience AI-powered assistance everywhere</p>
+            <button class="btn btn-primary btn-large" onclick="showDownloadModal()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                </svg>
+                Download Ryco v1.0.0
+            </button>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="../icons/icon-48.png" alt="Ryco Logo">
+                    <span>RYCO</span>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Product</h4>
+                        <a href="#features">Features</a>
+                        <a href="#models">Models</a>
+                        <a href="#installation">Installation</a>
+                        <a href="#download" onclick="showDownloadModal(); return false;">Download</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Resources</h4>
+                        <a href="#" onclick="showDocModal('readme'); return false;">Documentation</a>
+                        <a href="#" onclick="showDocModal('changelog'); return false;">Changelog</a>
+                        <a href="https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant" target="_blank">GitHub</a>
+                        <a href="https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant/issues" target="_blank">Support</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Legal</h4>
+                        <a href="https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant/blob/main/LICENSE" target="_blank">License</a>
+                        <a href="#" onclick="showDocModal('contributing'); return false;">Contributing</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>Created by Mohammad Faiz</p>
+                <p>© 2025 Ryco. Open source under MIT License.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Download Modal -->
+    <div id="downloadModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Download Ryco</h2>
+                <button class="modal-close" onclick="closeDownloadModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-description">Choose a version to download. Each release includes all necessary files.</p>
+                <div class="releases">
+                    <div class="release-card">
+                        <div class="release-header">
+                            <div>
+                                <h3>v1.0.0</h3>
+                                <span class="release-badge">Latest</span>
+                            </div>
+                            <span class="release-date">January 29, 2025</span>
+                        </div>
+                        <p class="release-description">Initial stable release with multi-provider support, 20+ AI models, and enterprise-grade security.</p>
+                        <div class="release-features">
+                            <span class="feature-tag">NVIDIA NIM</span>
+                            <span class="feature-tag">Google Gemini</span>
+                            <span class="feature-tag">OpenAI</span>
+                            <span class="feature-tag">20+ Models</span>
+                        </div>
+                        <a href="https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant/releases/download/v1.0.0/ryco-ai-assistant-main.zip" class="btn btn-primary btn-full" download>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                            </svg>
+                            Download v1.0.0
+                        </a>
+                    </div>
+                </div>
+                <div class="install-note">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="16" x2="12" y2="12"/>
+                        <line x1="12" y1="8" x2="12.01" y2="8"/>
+                    </svg>
+                    <p>After downloading, extract the ZIP file and follow the <a href="#installation">installation guide</a>.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Documentation Modal -->
+    <div id="docModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 id="docModalTitle">Documentation</h2>
+                <button class="modal-close" onclick="closeDocModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="docModalContent" class="doc-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
