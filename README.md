@@ -81,6 +81,8 @@ Created by **Mohammad Faiz**
 
 ### Performance
 - Instant trigger detection
+- Ultra-fast response generation with optimized prompts
+- Reduced latency with streamlined system instructions
 - Debounced input handling
 - Efficient Shadow DOM implementation
 - Minimal memory footprint

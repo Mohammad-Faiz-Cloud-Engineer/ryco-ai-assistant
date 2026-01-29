@@ -26,10 +26,19 @@ const elements = {
 
 // ========== Initialization ==========
 async function init() {
-    await loadSettings();
-    setupEventListeners();
-    renderModelSelectors();
-    updateProviderStatuses();
+    try {
+        await loadSettings();
+        setupEventListeners();
+        renderModelSelectors();
+        updateProviderStatuses();
+    } catch (error) {
+        console.error('[Ryco] Initialization error:', error);
+        // Show error state in UI
+        const errorMsg = document.createElement('div');
+        errorMsg.style.cssText = 'padding: 20px; text-align: center; color: var(--ryco-error);';
+        errorMsg.textContent = 'Failed to load settings. Please refresh.';
+        elements.app?.appendChild(errorMsg);
+    }
 }
 
 async function loadSettings() {
@@ -49,9 +58,12 @@ async function loadSettings() {
             // Set theme radio
             const themeRadio = document.querySelector(`input[name="theme"][value="${settings.theme}"]`);
             if (themeRadio) themeRadio.checked = true;
+        } else {
+            throw new Error(response?.error || 'Failed to load settings');
         }
     } catch (e) {
-        console.error('Failed to load settings:', e);
+        console.error('[Ryco] Failed to load settings:', e);
+        throw e;
     }
 }
 
@@ -123,6 +135,8 @@ function toggleTheme() {
 
 // ========== Model Selectors ==========
 function renderModelSelectors() {
+    if (!elements.modelSection) return;
+    
     elements.modelSection.innerHTML = '';
 
     for (const [key, provider] of Object.entries(providers)) {
@@ -143,10 +157,12 @@ function renderModelSelectors() {
     `;
 
         const select = card.querySelector('select');
-        select.addEventListener('change', (e) => {
-            settings.selectedModels[key] = e.target.value;
-            saveSettings({ selectedModels: settings.selectedModels });
-        });
+        if (select) {
+            select.addEventListener('change', (e) => {
+                settings.selectedModels[key] = e.target.value;
+                saveSettings({ selectedModels: settings.selectedModels });
+            });
+        }
 
         elements.modelSection.appendChild(card);
     }
@@ -156,6 +172,12 @@ function renderModelSelectors() {
 async function testConnection(provider) {
     const input = document.getElementById(`key-${provider}`);
     const statusEl = document.getElementById(`status-${provider}`);
+    
+    if (!input || !statusEl) {
+        console.error('[Ryco] Missing DOM elements for provider:', provider);
+        return;
+    }
+    
     const apiKey = input.value.trim();
 
     if (!apiKey) {
@@ -178,47 +200,64 @@ async function testConnection(provider) {
             updateStatus(statusEl, 'error', response?.error || 'Connection failed');
         }
     } catch (error) {
+        console.error('[Ryco] Test connection error:', error);
         updateStatus(statusEl, 'error', error.message || 'Connection failed');
     }
 }
 
 function updateStatus(element, status, text) {
+    if (!element) return;
+    
     element.className = `ryco-status ${status}`;
-    element.querySelector('.ryco-status-text').textContent = text;
+    const textEl = element.querySelector('.ryco-status-text');
+    if (textEl) {
+        textEl.textContent = text;
+    }
 }
 
 async function saveAllKeys() {
     const btn = elements.saveKeys;
+    if (!btn) return;
+    
     btn.disabled = true;
     btn.textContent = 'Saving...';
 
     try {
         const providerIds = ['nvidia', 'gemini', 'openai'];
+        let savedCount = 0;
 
         for (const provider of providerIds) {
             const input = document.getElementById(`key-${provider}`);
+            if (!input) continue;
+            
             const apiKey = input.value.trim();
 
             if (apiKey) {
-                await chrome.runtime.sendMessage({
+                const response = await chrome.runtime.sendMessage({
                     type: 'RYCO_SAVE_API_KEY',
                     provider,
                     apiKey
                 });
 
-                // Update status
-                const statusEl = document.getElementById(`status-${provider}`);
-                updateStatus(statusEl, 'connected', 'Key saved');
+                if (response?.success) {
+                    savedCount++;
+                    // Update status
+                    const statusEl = document.getElementById(`status-${provider}`);
+                    if (statusEl) {
+                        updateStatus(statusEl, 'connected', 'Key saved');
+                    }
+                }
             }
         }
 
-        btn.textContent = 'Saved!';
+        btn.textContent = savedCount > 0 ? `Saved ${savedCount} key(s)!` : 'No keys to save';
         setTimeout(() => {
             btn.textContent = 'Save All Keys';
             btn.disabled = false;
         }, 2000);
 
     } catch (error) {
+        console.error('[Ryco] Save keys error:', error);
         btn.textContent = 'Error saving';
         setTimeout(() => {
             btn.textContent = 'Save All Keys';

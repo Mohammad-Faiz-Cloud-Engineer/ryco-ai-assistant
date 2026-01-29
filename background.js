@@ -191,19 +191,11 @@ async function sendChatRequest(prompt, streamCallback) {
     messages: [
       {
         role: 'system',
-        content: 'You are Ryco, an AI assistant created by Mohammad Faiz.'
+        content: 'You are Ryco by Mohammad Faiz. Be extremely concise and direct. No introductions, no preambles, no filler. Get straight to the answer immediately. Keep responses brief and actionable.'
       },
       {
         role: 'system',
-        content: 'Core Behavior: Get straight to the point. Provide direct, concise answers without unnecessary introductions, preambles, or filler text. Be brief, clear, and actionable.'
-      },
-      {
-        role: 'system',
-        content: 'Formatting Rules: Write in clean plain text without markdown symbols. Never use asterisks for bold (**text**), brackets for placeholders [text], or other markup syntax. Use natural punctuation and spacing instead.'
-      },
-      {
-        role: 'system',
-        content: 'Professional Communication: When writing emails or business content, maintain a professional tone with proper grammar. Format naturally as a human would write, suitable for corporate environments.'
+        content: 'Format: Plain text only. No markdown, no asterisks, no brackets, no symbols. Write naturally like a human. For emails/business content, be professional but concise.'
       },
       {
         role: 'user',
@@ -211,7 +203,7 @@ async function sendChatRequest(prompt, streamCallback) {
       }
     ],
     stream: true,
-    temperature: 0.7
+    temperature: 0.5
   };
   
   try {
@@ -231,40 +223,45 @@ async function sendChatRequest(prompt, streamCallback) {
     
     // Handle SSE streaming
     const reader = response.body.getReader();
-    const decoder = new TextDecoder();
+    const decoder = new TextDecoder('utf-8', { fatal: false });
     let fullResponse = '';
     let buffer = '';
     let chunkCount = 0;
     
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) {
-        console.log(`[${settings.activeProvider.toUpperCase()}] Stream complete. Total chunks:`, chunkCount);
-        break;
-      }
-      
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
-      
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6).trim();
-          if (data === '[DONE]') continue;
-          
-          try {
-            const parsed = JSON.parse(data);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) {
-              chunkCount++;
-              fullResponse += content;
-              streamCallback(content, false);
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          console.log(`[${settings.activeProvider.toUpperCase()}] Stream complete. Total chunks:`, chunkCount);
+          break;
+        }
+        
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6).trim();
+            if (data === '[DONE]') continue;
+            if (!data) continue;
+            
+            try {
+              const parsed = JSON.parse(data);
+              const content = parsed.choices?.[0]?.delta?.content;
+              if (content) {
+                chunkCount++;
+                fullResponse += content;
+                streamCallback(content, false);
+              }
+            } catch (e) {
+              // Skip malformed JSON
             }
-          } catch (e) {
-            // Skip malformed JSON
           }
         }
       }
+    } finally {
+      reader.releaseLock();
     }
     
     console.log(`[${settings.activeProvider.toUpperCase()}] Full response length:`, fullResponse.length);
@@ -279,13 +276,7 @@ async function sendChatRequest(prompt, streamCallback) {
 
 // ========== Gemini-specific Request Handler ==========
 async function sendGeminiRequest(prompt, model, apiKey, streamCallback) {
-  const systemPrompt = `You are Ryco, an AI assistant created by Mohammad Faiz.
-
-Core Behavior: Get straight to the point. Provide direct, concise answers without unnecessary introductions, preambles, or filler text. Be brief, clear, and actionable.
-
-Formatting Rules: Write in clean plain text without markdown symbols. Never use asterisks for bold (**text**), brackets for placeholders [text], or other markup syntax. Use natural punctuation and spacing instead.
-
-Professional Communication: When writing emails or business content, maintain a professional tone with proper grammar. Format naturally as a human would write, suitable for corporate environments.`;
+  const systemPrompt = `You are Ryco by Mohammad Faiz. Be extremely concise and direct. No introductions, no preambles, no filler. Get straight to the answer immediately. Keep responses brief and actionable. Format: Plain text only. No markdown, no asterisks, no brackets, no symbols. Write naturally like a human. For emails/business content, be professional but concise.`;
 
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
   
@@ -299,7 +290,8 @@ Professional Communication: When writing emails or business content, maintain a 
       }
     ],
     generationConfig: {
-      temperature: 0.7
+      temperature: 0.5,
+      candidateCount: 1
     }
   };
   
@@ -323,57 +315,61 @@ Professional Communication: When writing emails or business content, maintain a 
     }
     
     const reader = response.body.getReader();
-    const decoder = new TextDecoder();
+    const decoder = new TextDecoder('utf-8', { fatal: false });
     let fullResponse = '';
     let buffer = '';
     let chunkCount = 0;
     
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) {
-        console.log('[Gemini] Stream complete. Total chunks:', chunkCount);
-        break;
-      }
-      
-      buffer += decoder.decode(value, { stream: true });
-      
-      // Gemini SSE format: data: {...}
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
-      
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6).trim();
-          if (!data) continue;
-          
-          try {
-            const parsed = JSON.parse(data);
-            const content = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (content) {
-              chunkCount++;
-              fullResponse += content;
-              streamCallback(content, false);
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          console.log('[Gemini] Stream complete. Total chunks:', chunkCount);
+          break;
+        }
+        
+        buffer += decoder.decode(value, { stream: true });
+        
+        // Gemini SSE format: data: {...}
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6).trim();
+            if (!data) continue;
+            
+            try {
+              const parsed = JSON.parse(data);
+              const content = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (content) {
+                chunkCount++;
+                fullResponse += content;
+                streamCallback(content, false);
+              }
+            } catch (e) {
+              console.error('[Gemini] Parse error:', e, 'Line:', data.substring(0, 100));
             }
-          } catch (e) {
-            console.error('[Gemini] Parse error:', e, 'Line:', data.substring(0, 100));
           }
         }
       }
-    }
-    
-    // Process any remaining buffer
-    if (buffer.trim() && buffer.startsWith('data: ')) {
-      try {
-        const data = buffer.slice(6).trim();
-        const parsed = JSON.parse(data);
-        const content = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (content) {
-          fullResponse += content;
-          streamCallback(content, false);
+      
+      // Process any remaining buffer
+      if (buffer.trim() && buffer.startsWith('data: ')) {
+        try {
+          const data = buffer.slice(6).trim();
+          const parsed = JSON.parse(data);
+          const content = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (content) {
+            fullResponse += content;
+            streamCallback(content, false);
+          }
+        } catch (e) {
+          console.error('[Gemini] Final buffer parse error:', e);
         }
-      } catch (e) {
-        console.error('[Gemini] Final buffer parse error:', e);
       }
+    } finally {
+      reader.releaseLock();
     }
     
     console.log('[Gemini] Full response length:', fullResponse.length);

@@ -452,6 +452,8 @@
     }
 
     async function sendPromptToBackground(prompt) {
+        if (!activeCommandBar) return;
+        
         try {
             await chrome.runtime.sendMessage({
                 type: 'RYCO_CHAT',
@@ -459,6 +461,7 @@
                 requestId: currentRequestId
             });
         } catch (error) {
+            console.error('[Ryco] Failed to send prompt:', error);
             showToast('error', 'Error', error.message || 'Failed to send request');
             closeCommandBar();
         }
@@ -477,24 +480,28 @@
             return;
         }
 
-        // Hide loading skeleton on first chunk
-        if (activeCommandBar.loadingSkeleton) {
-            activeCommandBar.loadingSkeleton.remove();
-            activeCommandBar.loadingSkeleton = null;
-            activeCommandBar.responseArea.innerHTML = '';
-        }
+        try {
+            // Hide loading skeleton on first chunk
+            if (activeCommandBar.loadingSkeleton) {
+                activeCommandBar.loadingSkeleton.remove();
+                activeCommandBar.loadingSkeleton = null;
+                activeCommandBar.responseArea.innerHTML = '';
+            }
 
-        if (message.chunk) {
-            activeCommandBar.response += message.chunk;
-            activeCommandBar.responseArea.innerHTML =
-                escapeHtml(activeCommandBar.response) +
-                (message.isDone ? '' : '<span class="ryco-cursor"></span>');
-        }
+            if (message.chunk) {
+                activeCommandBar.response += message.chunk;
+                activeCommandBar.responseArea.innerHTML =
+                    escapeHtml(activeCommandBar.response) +
+                    (message.isDone ? '' : '<span class="ryco-cursor"></span>');
+            }
 
-        if (message.isDone) {
-            // Remove cursor when done
-            const cursor = activeCommandBar.responseArea.querySelector('.ryco-cursor');
-            cursor?.remove();
+            if (message.isDone) {
+                // Remove cursor when done
+                const cursor = activeCommandBar.responseArea.querySelector('.ryco-cursor');
+                cursor?.remove();
+            }
+        } catch (error) {
+            console.error('[Ryco] Stream chunk error:', error);
         }
     }
 
@@ -573,32 +580,40 @@
         }
     }
 
+    // Track elements to prevent duplicate listeners
+    const trackedElements = new WeakSet();
+
     // Use capturing to catch events before they're handled
     document.addEventListener('input', handleInput, true);
     document.addEventListener('keyup', handleKeyUp, true);
     
     // Also listen on focus to catch dynamically added elements
     document.addEventListener('focus', (e) => {
-        if (isEditableElement(e.target)) {
+        if (isEditableElement(e.target) && !trackedElements.has(e.target)) {
+            trackedElements.add(e.target);
             e.target.addEventListener('input', handleInput);
             e.target.addEventListener('keyup', handleKeyUp);
         }
     }, true);
 
     // ========== MutationObserver for Dynamic Content ==========
+    const trackedDynamicElements = new WeakSet();
+    
     const observerCallback = debounce((mutations) => {
         for (const mutation of mutations) {
             for (const node of mutation.addedNodes) {
                 if (node.nodeType === Node.ELEMENT_NODE) {
                     // Check if the added node is an editable element
-                    if (isEditableElement(node)) {
+                    if (isEditableElement(node) && !trackedDynamicElements.has(node)) {
+                        trackedDynamicElements.add(node);
                         node.addEventListener('input', handleInput);
                         node.addEventListener('keyup', handleKeyUp);
                     }
                     // Check for editable children
                     const editables = node.querySelectorAll?.('input, textarea, [contenteditable="true"]');
                     editables?.forEach(el => {
-                        if (isEditableElement(el)) {
+                        if (isEditableElement(el) && !trackedDynamicElements.has(el)) {
+                            trackedDynamicElements.add(el);
                             el.addEventListener('input', handleInput);
                             el.addEventListener('keyup', handleKeyUp);
                         }

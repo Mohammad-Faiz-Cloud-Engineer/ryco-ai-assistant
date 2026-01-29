@@ -30,6 +30,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MutationObserver for dynamic content detection
 - Support for popular rich text editors (Quill, TinyMCE, ProseMirror, Draft.js)
 
+### Optimized
+- Ultra-fast response generation with optimized system prompts
+- Reduced temperature (0.5) for faster, more focused responses
+- Streamlined prompt engineering for minimal latency
+- Concise system instructions for quicker LLM processing
+
 ### Security
 - Implemented AES-256-GCM encryption for API keys
 - Secure local storage
