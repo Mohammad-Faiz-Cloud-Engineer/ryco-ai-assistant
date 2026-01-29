@@ -5,6 +5,42 @@ All notable changes to Ryco will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-01-29
+
+### Added
+- Comprehensive logging for Google Gemini streaming
+- Real Ryco logo integration in command bar
+- Performance metrics tracking (events, chunks, bytes)
+- Safety settings for Gemini API to prevent content filtering
+- Enhanced error messages with detailed context
+- API key masking in console logs for security
+
+### Fixed
+- Google Gemini streaming response issues
+- SSE (Server-Sent Events) event parsing with proper double newline separation
+- Buffer management for incomplete events at chunk boundaries
+- Logo display in command bar (broken image issue)
+- Web accessible resources configuration for icons
+
+### Changed
+- Enhanced Gemini streaming implementation with production-grade SSE parsing
+- Improved buffer handling for streaming responses
+- Optimized memory management with better cleanup
+- Updated logo from SVG placeholder to actual Ryco logo image
+- Enhanced CSS styling for logo display
+
+### Improved
+- Performance optimizations for DOM operations
+- Memory efficiency with WeakSet tracking
+- Error handling throughout codebase
+- Code quality to corporate production-grade standards
+- Security with proper API key masking
+
+### Removed
+- All redundant code and unused functions
+- SVG placeholder logo
+- Em dashes replaced with standard hyphens
+
 ## [1.0.0] - 2025-01-29
 
 ### Added
@@ -65,4 +101,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.1.0]: https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant/releases/tag/v1.1.0
 [1.0.0]: https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant/releases/tag/v1.0.0
