@@ -109,20 +109,10 @@ body {
     gap: var(--ryco-space-3);
 }
 
-.ryco-logo-icon {
-    width: 32px;
-    height: 32px;
-    background: linear-gradient(135deg, var(--ryco-accent), var(--ryco-accent-hover));
+.ryco-logo-image {
+    width: 40px;
+    height: 40px;
     border-radius: var(--ryco-radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.ryco-logo-icon svg {
-    width: 18px;
-    height: 18px;
-    color: white;
 }
 
 .ryco-logo-content {
