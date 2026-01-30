@@ -332,8 +332,11 @@ async function sendGeminiRequest(prompt, model, apiKey, streamCallback, userCont
       }
     ],
     generationConfig: {
-      temperature: 0.5,
-      candidateCount: 1
+      temperature: 0.7,
+      topK: 40,
+      topP: 0.95,
+      candidateCount: 1,
+      maxOutputTokens: 2048
     },
     safetySettings: [
       {
@@ -356,6 +359,7 @@ async function sendGeminiRequest(prompt, model, apiKey, streamCallback, userCont
   };
   
   console.log('[Gemini] Sending request to:', model);
+  const startTime = performance.now();
   
   try {
     const response = await fetch(endpoint, {
@@ -366,6 +370,8 @@ async function sendGeminiRequest(prompt, model, apiKey, streamCallback, userCont
       body: JSON.stringify(body)
     });
     
+    const responseTime = performance.now() - startTime;
+    console.log('[Gemini] Response received in:', responseTime.toFixed(2), 'ms');
     console.log('[Gemini] Response status:', response.status);
     
     if (!response.ok) {
@@ -379,13 +385,22 @@ async function sendGeminiRequest(prompt, model, apiKey, streamCallback, userCont
     let fullResponse = '';
     let buffer = '';
     let chunkCount = 0;
+    let firstChunkTime = null;
     
     try {
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
+          const totalTime = performance.now() - startTime;
           console.log('[Gemini] Stream complete. Total chunks:', chunkCount);
+          console.log('[Gemini] Total time:', totalTime.toFixed(2), 'ms');
+          console.log('[Gemini] Average chunk time:', (totalTime / chunkCount).toFixed(2), 'ms');
           break;
+        }
+        
+        if (!firstChunkTime) {
+          firstChunkTime = performance.now() - startTime;
+          console.log('[Gemini] First chunk received in:', firstChunkTime.toFixed(2), 'ms');
         }
         
         buffer += decoder.decode(value, { stream: true });
@@ -432,7 +447,7 @@ async function sendGeminiRequest(prompt, model, apiKey, streamCallback, userCont
       reader.releaseLock();
     }
     
-    console.log('[Gemini] Full response length:', fullResponse.length);
+    console.log('[Gemini] Full response length:', fullResponse.length, 'characters');
     streamCallback('', true);
     return fullResponse;
     
