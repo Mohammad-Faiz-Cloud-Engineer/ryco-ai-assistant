@@ -208,6 +208,7 @@ async function sendChatRequest(prompt, streamCallback) {
   
   // OpenAI-compatible format for NVIDIA and OpenAI
   console.log(`[${settings.activeProvider.toUpperCase()}] Sending request to:`, model);
+  const startTime = performance.now();
   
   const headers = {
     'Content-Type': 'application/json',
@@ -241,7 +242,11 @@ async function sendChatRequest(prompt, streamCallback) {
     model: model,
     messages: messages,
     stream: true,
-    temperature: 0.5
+    temperature: 0.7,
+    max_tokens: 2048,
+    top_p: 0.95,
+    frequency_penalty: 0.0,
+    presence_penalty: 0.0
   };
   
   try {
@@ -251,6 +256,8 @@ async function sendChatRequest(prompt, streamCallback) {
       body: JSON.stringify(body)
     });
     
+    const responseTime = performance.now() - startTime;
+    console.log(`[${settings.activeProvider.toUpperCase()}] Response received in:`, responseTime.toFixed(2), 'ms');
     console.log(`[${settings.activeProvider.toUpperCase()}] Response status:`, response.status);
     
     if (!response.ok) {
@@ -265,13 +272,24 @@ async function sendChatRequest(prompt, streamCallback) {
     let fullResponse = '';
     let buffer = '';
     let chunkCount = 0;
+    let firstChunkTime = null;
     
     try {
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
+          const totalTime = performance.now() - startTime;
           console.log(`[${settings.activeProvider.toUpperCase()}] Stream complete. Total chunks:`, chunkCount);
+          console.log(`[${settings.activeProvider.toUpperCase()}] Total time:`, totalTime.toFixed(2), 'ms');
+          if (chunkCount > 0) {
+            console.log(`[${settings.activeProvider.toUpperCase()}] Average chunk time:`, (totalTime / chunkCount).toFixed(2), 'ms');
+          }
           break;
+        }
+        
+        if (!firstChunkTime) {
+          firstChunkTime = performance.now() - startTime;
+          console.log(`[${settings.activeProvider.toUpperCase()}] First chunk received in:`, firstChunkTime.toFixed(2), 'ms');
         }
         
         buffer += decoder.decode(value, { stream: true });
@@ -302,7 +320,7 @@ async function sendChatRequest(prompt, streamCallback) {
       reader.releaseLock();
     }
     
-    console.log(`[${settings.activeProvider.toUpperCase()}] Full response length:`, fullResponse.length);
+    console.log(`[${settings.activeProvider.toUpperCase()}] Full response length:`, fullResponse.length, 'characters');
     streamCallback('', true);
     return fullResponse;
     
