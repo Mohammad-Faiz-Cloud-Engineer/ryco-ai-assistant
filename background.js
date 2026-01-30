@@ -222,7 +222,7 @@ async function sendChatRequest(prompt, streamCallback) {
     },
     {
       role: 'system',
-      content: 'Format: Plain text only. No markdown, no asterisks, no brackets, no symbols. Write naturally like a human. For emails/business content, be professional but concise.'
+      content: 'Format: Plain text only. No markdown, no code fences (```), no asterisks, no brackets, no symbols. For code, provide it directly without any formatting markers. Write naturally like a human. For emails/business content, be professional but concise.'
     }
   ];
   
@@ -243,7 +243,7 @@ async function sendChatRequest(prompt, streamCallback) {
     messages: messages,
     stream: true,
     temperature: 0.7,
-    max_tokens: 2048,
+    max_tokens: 8192,
     top_p: 0.95,
     frequency_penalty: 0.0,
     presence_penalty: 0.0
@@ -354,7 +354,7 @@ async function sendGeminiRequest(prompt, model, apiKey, streamCallback, userCont
       topK: 40,
       topP: 0.95,
       candidateCount: 1,
-      maxOutputTokens: 2048
+      maxOutputTokens: 8192
     },
     safetySettings: [
       {
