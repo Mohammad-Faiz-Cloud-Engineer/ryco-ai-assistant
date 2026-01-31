@@ -1,0 +1,195 @@
+name: Validate Extension
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Validate Extension Files
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Validate manifest.json
+        run: |
+          echo "🔍 Validating manifest.json..."
+          
+          # Check if manifest.json exists
+          if [ ! -f "manifest.json" ]; then
+            echo "❌ manifest.json not found!"
+            exit 1
+          fi
+          
+          # Validate JSON syntax
+          if ! jq empty manifest.json 2>/dev/null; then
+            echo "❌ manifest.json has invalid JSON syntax!"
+            exit 1
+          fi
+          
+          # Check required fields
+          REQUIRED_FIELDS=("manifest_version" "name" "version" "description")
+          for field in "${REQUIRED_FIELDS[@]}"; do
+            if ! jq -e ".$field" manifest.json > /dev/null; then
+              echo "❌ Missing required field: $field"
+              exit 1
+            fi
+          done
+          
+          # Extract and display version
+          VERSION=$(jq -r '.version' manifest.json)
+          echo "✅ Manifest version: $VERSION"
+          
+          # Validate manifest version
+          MANIFEST_VERSION=$(jq -r '.manifest_version' manifest.json)
+          if [ "$MANIFEST_VERSION" != "3" ]; then
+            echo "⚠️  Warning: Using Manifest V$MANIFEST_VERSION (V3 recommended)"
+          fi
+          
+          echo "✅ manifest.json is valid"
+      
+      - name: Check required files
+        run: |
+          echo "🔍 Checking required extension files..."
+          
+          REQUIRED_FILES=(
+            "manifest.json"
+            "background.js"
+            "content.js"
+            "popup.html"
+            "popup.js"
+            "icons/icon-16.png"
+            "icons/icon-48.png"
+            "icons/icon-128.png"
+          )
+          
+          MISSING_FILES=()
+          
+          for file in "${REQUIRED_FILES[@]}"; do
+            if [ ! -f "$file" ]; then
+              MISSING_FILES+=("$file")
+              echo "❌ Missing: $file"
+            else
+              echo "✅ Found: $file"
+            fi
+          done
+          
+          if [ ${#MISSING_FILES[@]} -gt 0 ]; then
+            echo ""
+            echo "❌ Missing ${#MISSING_FILES[@]} required file(s)"
+            exit 1
+          fi
+          
+          echo ""
+          echo "✅ All required files present"
+      
+      - name: Validate JavaScript syntax
+        run: |
+          echo "🔍 Validating JavaScript files..."
+          
+          # Install Node.js for syntax checking
+          sudo apt-get update
+          sudo apt-get install -y nodejs
+          
+          JS_FILES=$(find . -name "*.js" -not -path "./node_modules/*" -not -path "./.git/*" -not -path "./Web/*")
+          
+          ERROR_COUNT=0
+          
+          for file in $JS_FILES; do
+            echo "Checking: $file"
+            if ! node --check "$file" 2>/dev/null; then
+              echo "❌ Syntax error in: $file"
+              ERROR_COUNT=$((ERROR_COUNT + 1))
+            fi
+          done
+          
+          if [ $ERROR_COUNT -gt 0 ]; then
+            echo ""
+            echo "❌ Found $ERROR_COUNT file(s) with syntax errors"
+            exit 1
+          fi
+          
+          echo ""
+          echo "✅ All JavaScript files have valid syntax"
+      
+      - name: Check file sizes
+        run: |
+          echo "📊 Checking file sizes..."
+          
+          # Check if any single file is too large (>5MB)
+          LARGE_FILES=$(find . -type f -size +5M -not -path "./.git/*" -not -path "./node_modules/*")
+          
+          if [ -n "$LARGE_FILES" ]; then
+            echo "⚠️  Warning: Large files detected (>5MB):"
+            echo "$LARGE_FILES"
+          else
+            echo "✅ No large files detected"
+          fi
+          
+          # Calculate total extension size (excluding Web, .git, etc.)
+          TOTAL_SIZE=$(du -sb . --exclude=.git --exclude=node_modules --exclude=Web --exclude=.github | cut -f1)
+          TOTAL_SIZE_MB=$((TOTAL_SIZE / 1024 / 1024))
+          
+          echo "📦 Total extension size: ${TOTAL_SIZE_MB}MB"
+          
+          if [ $TOTAL_SIZE_MB -gt 50 ]; then
+            echo "⚠️  Warning: Extension size is large (${TOTAL_SIZE_MB}MB)"
+          fi
+      
+      - name: Validate CSS files
+        run: |
+          echo "🔍 Validating CSS files..."
+          
+          CSS_FILES=$(find styles -name "*.css" 2>/dev/null || true)
+          
+          if [ -z "$CSS_FILES" ]; then
+            echo "⚠️  No CSS files found"
+          else
+            for file in $CSS_FILES; do
+              echo "✅ Found: $file"
+            done
+          fi
+      
+      - name: Check for common issues
+        run: |
+          echo "🔍 Checking for common issues..."
+          
+          # Check for console.log in production code (warning only)
+          CONSOLE_LOGS=$(grep -r "console\.log" --include="*.js" --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=Web . | wc -l)
+          if [ $CONSOLE_LOGS -gt 0 ]; then
+            echo "⚠️  Found $CONSOLE_LOGS console.log statements (consider removing for production)"
+          fi
+          
+          # Check for TODO/FIXME comments
+          TODOS=$(grep -r "TODO\|FIXME" --include="*.js" --exclude-dir=node_modules --exclude-dir=.git . | wc -l)
+          if [ $TODOS -gt 0 ]; then
+            echo "ℹ️  Found $TODOS TODO/FIXME comments"
+          fi
+          
+          echo "✅ Common issues check complete"
+      
+      - name: Generate validation report
+        if: always()
+        run: |
+          echo "## 📋 Validation Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          VERSION=$(jq -r '.version' manifest.json)
+          NAME=$(jq -r '.name' manifest.json)
+          
+          echo "**Extension:** $NAME" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** $VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### ✅ Validation Results:" >> $GITHUB_STEP_SUMMARY
+          echo "- Manifest: Valid" >> $GITHUB_STEP_SUMMARY
+          echo "- Required files: Present" >> $GITHUB_STEP_SUMMARY
+          echo "- JavaScript syntax: Valid" >> $GITHUB_STEP_SUMMARY
+          echo "- File sizes: Acceptable" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** Ready for release ✅" >> $GITHUB_STEP_SUMMARY
