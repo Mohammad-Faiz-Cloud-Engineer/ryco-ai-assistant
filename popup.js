@@ -55,10 +55,22 @@ async function init() {
     }
 }
 
+/**
+ * Loads and validates settings from storage
+ * @returns {Promise<void>}
+ */
 async function loadSettings() {
     try {
         const response = await chrome.runtime.sendMessage({ type: 'RYCO_GET_SETTINGS' });
         if (response?.success) {
+            // Validate settings structure
+            if (!response.settings || typeof response.settings !== 'object') {
+                throw new Error('Invalid settings structure');
+            }
+            if (!response.providers || typeof response.providers !== 'object') {
+                throw new Error('Invalid providers structure');
+            }
+            
             settings = response.settings;
             providers = response.providers;
 
@@ -80,12 +92,28 @@ async function loadSettings() {
         }
     } catch (e) {
         console.error('[Ryco] Failed to load settings:', e);
+        // Show user-friendly error
+        showErrorState('Failed to load settings. Please refresh the page.');
         throw e;
     }
 }
 
+/**
+ * Shows error state in UI
+ * @param {string} message - Error message to display
+ */
+function showErrorState(message) {
+    const errorMsg = document.createElement('div');
+    errorMsg.style.cssText = 'padding: 20px; text-align: center; color: var(--ryco-error);';
+    errorMsg.textContent = message;
+    elements.app?.appendChild(errorMsg);
+}
+
+/**
+ * Loads user details into form fields with validation
+ */
 function loadUserDetails() {
-    if (!settings.userDetails) {
+    if (!settings.userDetails || typeof settings.userDetails !== 'object') {
         settings.userDetails = {
             name: '', role: '', company: '', industry: '',
             experience: '', skills: '', goals: '', tone: '',
@@ -109,8 +137,12 @@ function loadUserDetails() {
 
     for (const [elementId, settingKey] of Object.entries(fields)) {
         const element = document.getElementById(elementId);
-        if (element && settings.userDetails[settingKey]) {
-            element.value = settings.userDetails[settingKey];
+        if (element) {
+            const value = settings.userDetails[settingKey];
+            // Validate and sanitize before setting
+            if (typeof value === 'string') {
+                element.value = value;
+            }
         }
     }
 }
@@ -347,6 +379,47 @@ async function saveSettings(partial) {
 }
 
 // ========== User Details Management ==========
+/**
+ * Validates and sanitizes user input
+ * @param {string} value - Input value to sanitize
+ * @param {number} maxLength - Maximum allowed length
+ * @returns {string} Sanitized value
+ */
+function sanitizeInput(value, maxLength = 500) {
+    if (typeof value !== 'string') return '';
+    // Remove potentially dangerous characters and limit length
+    return value.trim()
+        .replace(/[<>]/g, '')
+        .substring(0, maxLength);
+}
+
+/**
+ * Validates user details before saving
+ * @param {Object} userDetails - User details object
+ * @returns {Object} Validation result with isValid and errors
+ */
+function validateUserDetails(userDetails) {
+    const errors = [];
+    
+    // Optional validation rules
+    if (userDetails.name && userDetails.name.length > 100) {
+        errors.push('Name is too long (max 100 characters)');
+    }
+    
+    if (userDetails.skills && userDetails.skills.length > 500) {
+        errors.push('Skills field is too long (max 500 characters)');
+    }
+    
+    if (userDetails.context && userDetails.context.length > 1000) {
+        errors.push('Context field is too long (max 1000 characters)');
+    }
+    
+    return {
+        isValid: errors.length === 0,
+        errors
+    };
+}
+
 async function saveUserDetails() {
     const btn = elements.saveUserDetails;
     if (!btn) return;
@@ -355,19 +428,26 @@ async function saveUserDetails() {
     btn.textContent = 'Saving...';
 
     try {
+        // Collect and sanitize user details
         const userDetails = {
-            name: document.getElementById('user-name')?.value.trim() || '',
-            role: document.getElementById('user-role')?.value.trim() || '',
-            company: document.getElementById('user-company')?.value.trim() || '',
-            industry: document.getElementById('user-industry')?.value.trim() || '',
+            name: sanitizeInput(document.getElementById('user-name')?.value, 100),
+            role: sanitizeInput(document.getElementById('user-role')?.value, 100),
+            company: sanitizeInput(document.getElementById('user-company')?.value, 100),
+            industry: sanitizeInput(document.getElementById('user-industry')?.value, 100),
             experience: document.getElementById('user-experience')?.value || '',
-            skills: document.getElementById('user-skills')?.value.trim() || '',
-            goals: document.getElementById('user-goals')?.value.trim() || '',
+            skills: sanitizeInput(document.getElementById('user-skills')?.value, 500),
+            goals: sanitizeInput(document.getElementById('user-goals')?.value, 500),
             tone: document.getElementById('user-tone')?.value || '',
             language: document.getElementById('user-language')?.value || 'English',
-            timezone: document.getElementById('user-timezone')?.value.trim() || '',
-            context: document.getElementById('user-context')?.value.trim() || ''
+            timezone: sanitizeInput(document.getElementById('user-timezone')?.value, 50),
+            context: sanitizeInput(document.getElementById('user-context')?.value, 1000)
         };
+
+        // Validate user details
+        const validation = validateUserDetails(userDetails);
+        if (!validation.isValid) {
+            throw new Error(validation.errors.join(', '));
+        }
 
         settings.userDetails = userDetails;
         await saveSettings({ userDetails });
@@ -380,11 +460,11 @@ async function saveUserDetails() {
 
     } catch (error) {
         console.error('[Ryco] Save user details error:', error);
-        btn.textContent = 'Error saving';
+        btn.textContent = 'Error: ' + (error.message || 'Failed to save');
         setTimeout(() => {
             btn.textContent = 'Save User Details';
             btn.disabled = false;
-        }, 2000);
+        }, 3000);
     }
 }
 

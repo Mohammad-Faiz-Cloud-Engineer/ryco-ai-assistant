@@ -9,6 +9,7 @@
     // ========== Configuration ==========
     const TRIGGER_PATTERN = /@Ryco\s+(.+?)\/\/$/im;
     const DEBOUNCE_DELAY = 100; // Optimized for snappier UX
+    const MAX_PROMPT_LENGTH = 5000; // Prevent excessive prompts
 
     // ========== State ==========
     let currentTheme = 'dark';
@@ -308,12 +309,22 @@
         sendPromptToBackground(prompt);
     }
 
+    /**
+     * Escapes HTML to prevent XSS attacks
+     * @param {string} text - Text to escape
+     * @returns {string} Escaped HTML
+     */
     function escapeHtml(text) {
+        if (typeof text !== 'string') return '';
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
 
+    /**
+     * Sets up drag functionality for command bar with performance optimizations
+     * @param {HTMLElement} commandBar - Command bar element
+     */
     function setupDragFunctionality(commandBar) {
         const header = commandBar.querySelector('.ryco-draggable');
         if (!header) return;
@@ -323,6 +334,7 @@
         let currentY;
         let initialX;
         let initialY;
+        let rafId = null;
 
         header.style.cursor = 'move';
 
@@ -336,6 +348,7 @@
 
             isDragging = true;
             commandBar.style.transition = 'none';
+            commandBar.style.willChange = 'transform'; // Performance hint
         };
 
         const drag = (e) => {
@@ -343,29 +356,41 @@
 
             e.preventDefault();
 
-            currentX = e.clientX - initialX;
-            currentY = e.clientY - initialY;
+            // Use requestAnimationFrame for smooth dragging
+            if (rafId) {
+                cancelAnimationFrame(rafId);
+            }
 
-            // Keep within viewport bounds with padding
-            const padding = 16;
-            const barRect = commandBar.getBoundingClientRect();
-            const maxX = window.innerWidth - barRect.width - padding;
-            const maxY = window.innerHeight - barRect.height - padding;
+            rafId = requestAnimationFrame(() => {
+                currentX = e.clientX - initialX;
+                currentY = e.clientY - initialY;
 
-            currentX = Math.max(padding, Math.min(currentX, maxX));
-            currentY = Math.max(padding, Math.min(currentY, maxY));
+                // Keep within viewport bounds with padding
+                const padding = 16;
+                const barRect = commandBar.getBoundingClientRect();
+                const maxX = window.innerWidth - barRect.width - padding;
+                const maxY = window.innerHeight - barRect.height - padding;
 
-            commandBar.style.left = `${currentX}px`;
-            commandBar.style.top = `${currentY}px`;
+                currentX = Math.max(padding, Math.min(currentX, maxX));
+                currentY = Math.max(padding, Math.min(currentY, maxY));
+
+                commandBar.style.left = `${currentX}px`;
+                commandBar.style.top = `${currentY}px`;
+            });
         };
 
         const dragEnd = () => {
             isDragging = false;
             commandBar.style.transition = '';
+            commandBar.style.willChange = 'auto';
+            if (rafId) {
+                cancelAnimationFrame(rafId);
+                rafId = null;
+            }
         };
 
-        header.addEventListener('mousedown', dragStart);
-        document.addEventListener('mousemove', drag);
+        header.addEventListener('mousedown', dragStart, { passive: false });
+        document.addEventListener('mousemove', drag, { passive: false });
         document.addEventListener('mouseup', dragEnd);
 
         // Cleanup on close
@@ -373,6 +398,9 @@
             header.removeEventListener('mousedown', dragStart);
             document.removeEventListener('mousemove', drag);
             document.removeEventListener('mouseup', dragEnd);
+            if (rafId) {
+                cancelAnimationFrame(rafId);
+            }
         };
 
         // Store cleanup function for later use
@@ -416,18 +444,40 @@
         }
     }
 
+    /**
+     * Inserts AI response into the active element with validation
+     */
     function insertResponse() {
-        if (!activeCommandBar || !activeElement || !triggerMatch) return;
+        if (!activeCommandBar || !activeElement || !triggerMatch) {
+            console.warn('[Ryco] Cannot insert: missing required data');
+            return;
+        }
 
-        const currentValue = getElementValue(activeElement);
-        const newValue = currentValue.substring(0, triggerMatch.start) +
-            activeCommandBar.response +
-            currentValue.substring(triggerMatch.end);
+        try {
+            const currentValue = getElementValue(activeElement);
+            
+            // Validate response before inserting
+            if (!activeCommandBar.response || typeof activeCommandBar.response !== 'string') {
+                throw new Error('Invalid response data');
+            }
+            
+            // Ensure indices are valid
+            if (triggerMatch.start < 0 || triggerMatch.end > currentValue.length) {
+                throw new Error('Invalid trigger match indices');
+            }
+            
+            const newValue = currentValue.substring(0, triggerMatch.start) +
+                activeCommandBar.response +
+                currentValue.substring(triggerMatch.end);
 
-        setElementValue(activeElement, newValue);
-        closeCommandBar();
+            setElementValue(activeElement, newValue);
+            closeCommandBar();
 
-        showToast('success', 'Inserted', 'Response inserted successfully');
+            showToast('success', 'Inserted', 'Response inserted successfully');
+        } catch (error) {
+            console.error('[Ryco] Insert error:', error);
+            showToast('error', 'Error', 'Failed to insert response');
+        }
     }
 
     function closeCommandBar() {
@@ -451,10 +501,23 @@
         currentRequestId = null;
     }
 
+    /**
+     * Sends prompt to background script with error handling
+     * @param {string} prompt - User prompt to send
+     */
     async function sendPromptToBackground(prompt) {
         if (!activeCommandBar) return;
         
         try {
+            // Validate prompt
+            if (!prompt || typeof prompt !== 'string' || prompt.length === 0) {
+                throw new Error('Invalid prompt');
+            }
+            
+            if (prompt.length > MAX_PROMPT_LENGTH) {
+                throw new Error(`Prompt too long (max ${MAX_PROMPT_LENGTH} characters)`);
+            }
+            
             await chrome.runtime.sendMessage({
                 type: 'RYCO_CHAT',
                 prompt,
@@ -475,6 +538,10 @@
         return false;
     });
 
+    /**
+     * Handles streaming response chunks with error handling
+     * @param {Object} message - Message containing chunk data
+     */
     function handleStreamChunk(message) {
         if (!activeCommandBar || message.requestId !== activeCommandBar.requestId) {
             return;
@@ -488,11 +555,17 @@
                 activeCommandBar.responseArea.innerHTML = '';
             }
 
-            if (message.chunk) {
+            if (message.chunk && typeof message.chunk === 'string') {
                 activeCommandBar.response += message.chunk;
+                // Sanitize before rendering
                 activeCommandBar.responseArea.innerHTML =
                     escapeHtml(activeCommandBar.response) +
                     (message.isDone ? '' : '<span class="ryco-cursor"></span>');
+                
+                // Auto-scroll to bottom if content overflows
+                if (activeCommandBar.responseArea.scrollHeight > activeCommandBar.responseArea.clientHeight) {
+                    activeCommandBar.responseArea.scrollTop = activeCommandBar.responseArea.scrollHeight;
+                }
             }
 
             if (message.isDone) {
@@ -502,30 +575,42 @@
             }
         } catch (error) {
             console.error('[Ryco] Stream chunk error:', error);
+            showToast('error', 'Error', 'Failed to process response');
         }
     }
 
     // ========== Trigger Detection ==========
+    /**
+     * Checks for trigger pattern in element value
+     * @param {HTMLElement} element - Input element to check
+     */
     function checkForTrigger(element) {
-        const value = getElementValue(element);
-        const match = value.match(TRIGGER_PATTERN);
+        try {
+            const value = getElementValue(element);
+            if (!value || value.length > MAX_PROMPT_LENGTH) return;
+            
+            const match = value.match(TRIGGER_PATTERN);
 
-        if (match) {
-            const prompt = match[1].trim();
-            if (prompt.length < 2) return; // Minimum prompt length
+            if (match) {
+                const prompt = match[1].trim();
+                // Validate prompt length
+                if (prompt.length < 2 || prompt.length > MAX_PROMPT_LENGTH) return;
 
-            const matchStart = match.index;
-            const matchEnd = matchStart + match[0].length;
+                const matchStart = match.index;
+                const matchEnd = matchStart + match[0].length;
 
-            // Check if we're at the end of the trigger (user finished typing)
-            const caretPos = getCaretPosition(element);
-            if (caretPos >= matchEnd || value.charAt(matchEnd) === '\n' || matchEnd === value.length) {
-                showCommandBar(element, prompt, {
-                    start: matchStart,
-                    end: matchEnd,
-                    fullMatch: match[0]
-                });
+                // Check if we're at the end of the trigger (user finished typing)
+                const caretPos = getCaretPosition(element);
+                if (caretPos >= matchEnd || value.charAt(matchEnd) === '\n' || matchEnd === value.length) {
+                    showCommandBar(element, prompt, {
+                        start: matchStart,
+                        end: matchEnd,
+                        fullMatch: match[0]
+                    });
+                }
             }
+        } catch (error) {
+            console.error('[Ryco] Error checking trigger:', error);
         }
     }
 

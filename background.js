@@ -136,61 +136,150 @@ const PROVIDERS = {
 };
 
 // ========== Storage Utilities ==========
+/**
+ * Retrieves and validates settings from chrome storage
+ * @returns {Promise<Object>} Settings object with defaults
+ */
 async function getSettings() {
-  const result = await chrome.storage.local.get([
-    'activeProvider',
-    'selectedModels',
-    'theme',
-    'apiKeys',
-    'userDetails'
-  ]);
-  
-  return {
-    activeProvider: result.activeProvider || 'openai',
-    selectedModels: result.selectedModels || {},
-    theme: result.theme || 'dark',
-    apiKeys: result.apiKeys || {},
-    userDetails: result.userDetails || {}
-  };
+  try {
+    const result = await chrome.storage.local.get([
+      'activeProvider',
+      'selectedModels',
+      'theme',
+      'apiKeys',
+      'userDetails'
+    ]);
+    
+    // Validate and sanitize settings
+    const validProviders = ['nvidia', 'gemini', 'openai'];
+    const activeProvider = validProviders.includes(result.activeProvider) 
+      ? result.activeProvider 
+      : 'openai';
+    
+    return {
+      activeProvider,
+      selectedModels: result.selectedModels && typeof result.selectedModels === 'object' 
+        ? result.selectedModels 
+        : {},
+      theme: ['dark', 'light'].includes(result.theme) ? result.theme : 'dark',
+      apiKeys: result.apiKeys && typeof result.apiKeys === 'object' 
+        ? result.apiKeys 
+        : {},
+      userDetails: result.userDetails && typeof result.userDetails === 'object' 
+        ? result.userDetails 
+        : {}
+    };
+  } catch (error) {
+    console.error('[Ryco] Failed to get settings:', error);
+    // Return safe defaults
+    return {
+      activeProvider: 'openai',
+      selectedModels: {},
+      theme: 'dark',
+      apiKeys: {},
+      userDetails: {}
+    };
+  }
 }
 
+/**
+ * Retrieves and decrypts the active provider's API key
+ * @returns {Promise<string|null>} Decrypted API key or null
+ */
 async function getActiveApiKey() {
-  const settings = await getSettings();
-  const encryptedKey = settings.apiKeys[settings.activeProvider];
-  if (!encryptedKey) return null;
-  return await decryptApiKey(encryptedKey);
+  try {
+    const settings = await getSettings();
+    const encryptedKey = settings.apiKeys[settings.activeProvider];
+    if (!encryptedKey) return null;
+    return await decryptApiKey(encryptedKey);
+  } catch (error) {
+    console.error('[Ryco] Failed to get active API key:', error);
+    return null;
+  }
 }
 
+/**
+ * Encrypts and saves an API key for a provider
+ * @param {string} provider - Provider name (nvidia, gemini, openai)
+ * @param {string} key - API key to encrypt and save
+ * @returns {Promise<void>}
+ */
 async function saveApiKey(provider, key) {
-  const settings = await getSettings();
-  const encrypted = await encryptApiKey(key);
-  settings.apiKeys[provider] = encrypted;
-  await chrome.storage.local.set({ apiKeys: settings.apiKeys });
+  try {
+    if (!provider || typeof provider !== 'string') {
+      throw new Error('Invalid provider');
+    }
+    if (!key || typeof key !== 'string' || key.length < 10) {
+      throw new Error('Invalid API key');
+    }
+    
+    const settings = await getSettings();
+    const encrypted = await encryptApiKey(key);
+    settings.apiKeys[provider] = encrypted;
+    await chrome.storage.local.set({ apiKeys: settings.apiKeys });
+  } catch (error) {
+    console.error('[Ryco] Failed to save API key:', error);
+    throw error;
+  }
 }
 
+/**
+ * Gets the active model for the current provider
+ * @returns {Promise<string>} Model identifier
+ */
 async function getActiveModel() {
-  const settings = await getSettings();
-  const provider = PROVIDERS[settings.activeProvider];
-  return settings.selectedModels[settings.activeProvider] || provider.defaultModel;
+  try {
+    const settings = await getSettings();
+    const provider = PROVIDERS[settings.activeProvider];
+    if (!provider) {
+      console.warn('[Ryco] Invalid provider, using default');
+      return PROVIDERS.openai.defaultModel;
+    }
+    return settings.selectedModels[settings.activeProvider] || provider.defaultModel;
+  } catch (error) {
+    console.error('[Ryco] Failed to get active model:', error);
+    return PROVIDERS.openai.defaultModel;
+  }
 }
 
 // ========== User Context Builder ==========
+/**
+ * Builds a sanitized user context string from user details
+ * @param {Object} userDetails - User profile information
+ * @returns {string} Formatted and sanitized user context
+ */
 function buildUserContext(userDetails) {
-  if (!userDetails || Object.keys(userDetails).length === 0) return '';
+  if (!userDetails || typeof userDetails !== 'object' || Object.keys(userDetails).length === 0) {
+    return '';
+  }
+  
+  // Sanitize function to prevent injection attacks
+  const sanitize = (value) => {
+    if (typeof value !== 'string') return '';
+    return value.trim().replace(/[<>]/g, '').substring(0, 500); // Limit length
+  };
   
   const parts = [];
+  const fieldMap = {
+    name: 'Name',
+    role: 'Role',
+    company: 'Company',
+    industry: 'Industry',
+    experience: 'Experience',
+    skills: 'Skills',
+    goals: 'Goals',
+    tone: 'Preferred tone',
+    language: 'Language',
+    timezone: 'Timezone',
+    context: 'Additional context'
+  };
   
-  if (userDetails.name) parts.push(`Name: ${userDetails.name}`);
-  if (userDetails.role) parts.push(`Role: ${userDetails.role}`);
-  if (userDetails.company) parts.push(`Company: ${userDetails.company}`);
-  if (userDetails.industry) parts.push(`Industry: ${userDetails.industry}`);
-  if (userDetails.experience) parts.push(`Experience: ${userDetails.experience}`);
-  if (userDetails.skills) parts.push(`Skills: ${userDetails.skills}`);
-  if (userDetails.goals) parts.push(`Goals: ${userDetails.goals}`);
-  if (userDetails.tone) parts.push(`Preferred tone: ${userDetails.tone}`);
-  if (userDetails.language) parts.push(`Language: ${userDetails.language}`);
-  if (userDetails.timezone) parts.push(`Timezone: ${userDetails.timezone}`);
-  if (userDetails.context) parts.push(`Additional context: ${userDetails.context}`);
+  for (const [key, label] of Object.entries(fieldMap)) {
+    const value = sanitize(userDetails[key]);
+    if (value) {
+      parts.push(`${label}: ${value}`);
+    }
+  }
   
   if (parts.length === 0) return '';
   
@@ -517,80 +606,121 @@ FORMAT: Plain text only. No markdown. No asterisks. No code fences. No brackets.
   }
 }
 
-// ========== Connection Test ==========
+/**
+ * Tests connection to a provider with timeout and validation
+ * @param {string} provider - Provider name
+ * @param {string} apiKey - API key to test
+ * @returns {Promise<Object>} Test result
+ */
 async function testConnection(provider, apiKey) {
-  const config = PROVIDERS[provider];
-  if (!config) {
-    throw new Error(`Unknown provider: ${provider}`);
-  }
-  
-  console.log(`[TEST] Testing connection for ${provider}...`);
-  
-  // Handle Gemini separately
-  if (provider === 'gemini') {
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${config.defaultModel}:generateContent?key=${apiKey}`;
-    const body = {
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: 'Hi' }]
-        }
-      ]
-    };
-    
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    
-    console.log(`[TEST] Gemini response status:`, response.status);
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error(`[TEST] Gemini error:`, errorData);
-      throw new Error(errorData.error?.message || `Connection failed: ${response.status}`);
+    const config = PROVIDERS[provider];
+    if (!config) {
+        throw new Error(`Unknown provider: ${provider}`);
     }
     
-    console.log(`[TEST] Gemini connection successful`);
-    return { success: true, provider: config.name };
-  }
-  
-  // OpenAI-compatible format for NVIDIA and OpenAI
-  const headers = {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${apiKey}`
-  };
-  
-  const body = {
-    model: config.defaultModel,
-    messages: [{ role: 'user', content: 'Hi' }]
-  };
-  
-  const response = await fetch(config.endpoint, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(body)
-  });
-  
-  console.log(`[TEST] ${provider.toUpperCase()} response status:`, response.status);
-  
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    console.error(`[TEST] ${provider.toUpperCase()} error:`, errorData);
-    throw new Error(errorData.error?.message || `Connection failed: ${response.status}`);
-  }
-  
-  console.log(`[TEST] ${provider.toUpperCase()} connection successful`);
-  return { success: true, provider: config.name };
+    // Validate API key format
+    if (!apiKey || typeof apiKey !== 'string' || apiKey.length < 10) {
+        throw new Error('Invalid API key format');
+    }
+    
+    console.log(`[TEST] Testing connection for ${provider}...`);
+    
+    // Set timeout for connection test
+    const timeoutMs = 15000; // 15 seconds
+    const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Connection test timed out')), timeoutMs)
+    );
+    
+    const testPromise = (async () => {
+        // Handle Gemini separately
+        if (provider === 'gemini') {
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${config.defaultModel}:generateContent?key=${apiKey}`;
+            const body = {
+                contents: [
+                    {
+                        role: 'user',
+                        parts: [{ text: 'Hi' }]
+                    }
+                ]
+            };
+            
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            
+            console.log(`[TEST] Gemini response status:`, response.status);
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error(`[TEST] Gemini error:`, errorData);
+                throw new Error(errorData.error?.message || `Connection failed: ${response.status}`);
+            }
+            
+            console.log(`[TEST] Gemini connection successful`);
+            return { success: true, provider: config.name };
+        }
+        
+        // OpenAI-compatible format for NVIDIA and OpenAI
+        const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+        };
+        
+        const body = {
+            model: config.defaultModel,
+            messages: [{ role: 'user', content: 'Hi' }],
+            max_tokens: 10
+        };
+        
+        const response = await fetch(config.endpoint, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(body)
+        });
+        
+        console.log(`[TEST] ${provider.toUpperCase()} response status:`, response.status);
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.error(`[TEST] ${provider.toUpperCase()} error:`, errorData);
+            throw new Error(errorData.error?.message || `Connection failed: ${response.status}`);
+        }
+        
+        console.log(`[TEST] ${provider.toUpperCase()} connection successful`);
+        return { success: true, provider: config.name };
+    })();
+    
+    // Race between test and timeout
+    return Promise.race([testPromise, timeoutPromise]);
 }
 
 // ========== Message Handler ==========
+/**
+ * Handles messages from content scripts with comprehensive error handling
+ */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   const handleAsync = async () => {
     try {
+      // Validate message structure
+      if (!message || typeof message !== 'object' || !message.type) {
+        return { success: false, error: 'Invalid message format' };
+      }
+      
       switch (message.type) {
         case 'RYCO_CHAT': {
+          // Validate required fields
+          if (!message.prompt || typeof message.prompt !== 'string') {
+            return { success: false, error: 'Invalid prompt' };
+          }
+          if (!message.requestId) {
+            return { success: false, error: 'Missing request ID' };
+          }
+          if (!sender.tab?.id) {
+            return { success: false, error: 'Invalid sender' };
+          }
+          
           const fullResponse = await sendChatRequest(
             message.prompt,
             (chunk, isDone) => {
@@ -599,6 +729,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 chunk,
                 isDone,
                 requestId: message.requestId
+              }).catch(err => {
+                console.error('[Ryco] Failed to send chunk:', err);
               });
             }
           );
@@ -606,11 +738,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
         
         case 'RYCO_TEST_CONNECTION': {
+          if (!message.provider || !message.apiKey) {
+            return { success: false, error: 'Missing provider or API key' };
+          }
           const result = await testConnection(message.provider, message.apiKey);
           return { success: true, ...result };
         }
         
         case 'RYCO_SAVE_API_KEY': {
+          if (!message.provider || !message.apiKey) {
+            return { success: false, error: 'Missing provider or API key' };
+          }
           await saveApiKey(message.provider, message.apiKey);
           return { success: true };
         }
@@ -621,6 +759,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
         
         case 'RYCO_UPDATE_SETTINGS': {
+          if (!message.settings || typeof message.settings !== 'object') {
+            return { success: false, error: 'Invalid settings' };
+          }
           await chrome.storage.local.set(message.settings);
           return { success: true };
         }
@@ -634,11 +775,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           return { success: false, error: 'Unknown message type' };
       }
     } catch (error) {
-      return { success: false, error: error.message };
+      console.error('[Ryco] Message handler error:', error);
+      return { success: false, error: error.message || 'Internal error' };
     }
   };
   
-  handleAsync().then(sendResponse);
+  handleAsync().then(sendResponse).catch(error => {
+    console.error('[Ryco] Async handler error:', error);
+    sendResponse({ success: false, error: error.message || 'Internal error' });
+  });
+  
   return true; // Keep channel open for async response
 });
 
