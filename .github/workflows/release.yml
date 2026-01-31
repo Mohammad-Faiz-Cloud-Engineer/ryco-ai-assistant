@@ -1,0 +1,145 @@
+name: Build and Release Extension
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Triggers on version tags like v1.4.0, v1.5.0, etc.
+  workflow_dispatch:  # Allows manual trigger from Actions tab
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.4.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write  # Required to create releases and upload assets
+
+jobs:
+  build-and-release:
+    name: Build Extension and Create Release
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for changelog generation
+      
+      - name: Get version from tag or input
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION=${GITHUB_REF#refs/tags/v}
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+      
+      - name: Verify manifest version matches
+        run: |
+          MANIFEST_VERSION=$(grep -oP '"version":\s*"\K[^"]+' manifest.json)
+          EXPECTED_VERSION="${{ steps.version.outputs.version }}"
+          echo "Manifest version: $MANIFEST_VERSION"
+          echo "Expected version: $EXPECTED_VERSION"
+          if [ "$MANIFEST_VERSION" != "$EXPECTED_VERSION" ]; then
+            echo "❌ Error: manifest.json version ($MANIFEST_VERSION) doesn't match tag ($EXPECTED_VERSION)"
+            exit 1
+          fi
+          echo "✅ Version verified"
+      
+      - name: Create extension package
+        run: |
+          # Create build directory
+          mkdir -p build
+          
+          # Copy extension files (exclude unnecessary files)
+          rsync -av --progress . build/ryco-extension \
+            --exclude .git \
+            --exclude .github \
+            --exclude .vscode \
+            --exclude node_modules \
+            --exclude build \
+            --exclude Web \
+            --exclude '*.md' \
+            --exclude .gitignore \
+            --exclude .DS_Store
+          
+          # Create ZIP file
+          cd build
+          zip -r "ryco-ai-assistant-v${{ steps.version.outputs.version }}.zip" ryco-extension/
+          
+          # Verify ZIP was created
+          ls -lh *.zip
+          echo "✅ Extension package created"
+      
+      - name: Create source code archive
+        run: |
+          cd build
+          
+          # Create full source archive (includes everything)
+          zip -r "ryco-ai-assistant-source-v${{ steps.version.outputs.version }}.zip" ../. \
+            -x "*.git*" \
+            -x "*node_modules*" \
+            -x "*build*" \
+            -x "*.DS_Store"
+          
+          echo "✅ Source archive created"
+      
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          
+          # Extract changelog for this version
+          if [ -f CHANGELOG.md ]; then
+            # Try to extract the section for this version
+            NOTES=$(sed -n "/## \[${VERSION}\]/,/## \[/p" CHANGELOG.md | sed '$d' | tail -n +2)
+            
+            if [ -z "$NOTES" ]; then
+              NOTES="Release version ${VERSION}"
+            fi
+          else
+            NOTES="Release version ${VERSION}"
+          fi
+          
+          # Save to file for multiline support
+          echo "$NOTES" > release_notes.txt
+          echo "✅ Release notes generated"
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: Ryco v${{ steps.version.outputs.version }}
+          body_path: release_notes.txt
+          draft: false
+          prerelease: false
+          files: |
+            build/ryco-ai-assistant-v${{ steps.version.outputs.version }}.zip
+            build/ryco-ai-assistant-source-v${{ steps.version.outputs.version }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ryco-extension-v${{ steps.version.outputs.version }}
+          path: build/*.zip
+          retention-days: 90
+      
+      - name: Release summary
+        run: |
+          echo "## 🎉 Release Created Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag:** ${{ steps.version.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Release Assets:" >> $GITHUB_STEP_SUMMARY
+          echo "- \`ryco-ai-assistant-v${{ steps.version.outputs.version }}.zip\` - Extension package" >> $GITHUB_STEP_SUMMARY
+          echo "- \`ryco-ai-assistant-source-v${{ steps.version.outputs.version }}.zip\` - Full source code" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 Links:" >> $GITHUB_STEP_SUMMARY
+          echo "- [View Release](https://github.com/${{ github.repository }}/releases/tag/${{ steps.version.outputs.tag }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [Download Extension](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.tag }}/ryco-ai-assistant-v${{ steps.version.outputs.version }}.zip)" >> $GITHUB_STEP_SUMMARY
