@@ -8,7 +8,7 @@
 
     // ========== Configuration ==========
     const TRIGGER_PATTERN = /@Ryco\s+(.+?)\/\/$/im;
-    const DEBOUNCE_DELAY = 150;
+    const DEBOUNCE_DELAY = 100; // Optimized for snappier UX
 
     // ========== State ==========
     let currentTheme = 'dark';
@@ -468,7 +468,7 @@
     }
 
     // ========== Stream Handler ==========
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    chrome.runtime.onMessage.addListener((message, _sender, _sendResponse) => {
         if (message.type === 'RYCO_STREAM_CHUNK') {
             handleStreamChunk(message);
         }
