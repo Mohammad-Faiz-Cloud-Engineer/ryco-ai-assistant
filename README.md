@@ -8,7 +8,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-blue.svg)](https://www.google.com/chrome/)
-[![Version](https://img.shields.io/badge/version-1.3.0-green.svg)](https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant)
+[![Version](https://img.shields.io/badge/version-1.4.0-green.svg)](https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant)
 [![GitHub Stars](https://img.shields.io/github/stars/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant?style=social)](https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant/stargazers)
 [![Website](https://img.shields.io/badge/Website-Live-brightgreen.svg)](https://mohammad-faiz-cloud-engineer.github.io/ryco-ai-assistant/)
 
