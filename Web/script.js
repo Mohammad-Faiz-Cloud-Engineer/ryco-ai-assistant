@@ -133,7 +133,12 @@ const ThemeManager = {
         try {
             darkModeQuery.addEventListener('change', handleThemeChange);
         } catch (e) {
-            console.warn('Unable to watch system theme changes:', e);
+            // Fallback for older browsers (though deprecated, still supported)
+            try {
+                darkModeQuery.addListener(handleThemeChange);
+            } catch (err) {
+                console.warn('Unable to watch system theme changes:', err);
+            }
         }
     },
     
@@ -807,7 +812,7 @@ function formatMarkdown(markdown) {
     
     // Code blocks (preserve content)
     const codeBlocks = [];
-    html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (_match, _lang, code) => {
+    html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
         const placeholder = `__CODE_BLOCK_${codeBlocks.length}__`;
         codeBlocks.push(`<pre><code>${escapeHtml(code)}</code></pre>`);
         return placeholder;
@@ -815,7 +820,7 @@ function formatMarkdown(markdown) {
     
     // Inline code (preserve content)
     const inlineCodes = [];
-    html = html.replace(/`([^`]+)`/g, (_match, code) => {
+    html = html.replace(/`([^`]+)`/g, (match, code) => {
         const placeholder = `__INLINE_CODE_${inlineCodes.length}__`;
         inlineCodes.push(`<code>${escapeHtml(code)}</code>`);
         return placeholder;

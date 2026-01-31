@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +7,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles/popup.css">
 </head>
-
 <body>
   <div class="ryco-popup" id="app">
     <!-- Header -->
@@ -20,20 +18,13 @@
           <span class="ryco-version">v1.4.0</span>
         </div>
       </div>
-      <button class="ryco-theme-toggle" id="themeToggle" aria-label="Toggle theme">
-        <svg class="ryco-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="5" />
-          <line x1="12" y1="1" x2="12" y2="3" />
-          <line x1="12" y1="21" x2="12" y2="23" />
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-          <line x1="1" y1="12" x2="3" y2="12" />
-          <line x1="21" y1="12" x2="23" y2="12" />
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+      <button class="ryco-theme-toggle" id="themeToggle" title="Toggle theme">
+        <svg class="icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5"/>
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
         </svg>
-        <svg class="ryco-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+        <svg class="icon-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
         </svg>
       </button>
     </header>
@@ -42,31 +33,29 @@
     <nav class="ryco-tabs">
       <button class="ryco-tab active" data-tab="api-keys">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path
-            d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
+          <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
         </svg>
         API Keys
       </button>
       <button class="ryco-tab" data-tab="user-details">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
         </svg>
         User Details
       </button>
       <button class="ryco-tab" data-tab="models">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-          <line x1="3" y1="9" x2="21" y2="9" />
-          <line x1="9" y1="21" x2="9" y2="9" />
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <line x1="3" y1="9" x2="21" y2="9"/>
+          <line x1="9" y1="21" x2="9" y2="9"/>
         </svg>
         Models
       </button>
       <button class="ryco-tab" data-tab="customize">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="3" />
-          <path
-            d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
         </svg>
         Customize
       </button>
@@ -165,14 +154,13 @@
       <section class="ryco-panel" id="panel-user-details">
         <div class="ryco-section">
           <h3 class="ryco-section-title">User Profile</h3>
-          <p class="ryco-section-desc">Provide your details to help AI generate more personalized and accurate
-            responses.</p>
+          <p class="ryco-section-desc">Provide your details to help AI generate more personalized and accurate responses.</p>
         </div>
 
         <!-- Personal Information -->
         <div class="ryco-field-group">
           <h4 class="ryco-field-group-title">Personal Information</h4>
-
+          
           <div class="ryco-field">
             <label class="ryco-label" for="user-name">Full Name</label>
             <input type="text" class="ryco-input" id="user-name" placeholder="e.g., Mohammad Faiz">
@@ -180,8 +168,7 @@
 
           <div class="ryco-field">
             <label class="ryco-label" for="user-role">Job Title / Role</label>
-            <input type="text" class="ryco-input" id="user-role"
-              placeholder="e.g., Software Engineer, Marketing Manager">
+            <input type="text" class="ryco-input" id="user-role" placeholder="e.g., Software Engineer, Marketing Manager">
           </div>
 
           <div class="ryco-field">
@@ -191,15 +178,14 @@
 
           <div class="ryco-field">
             <label class="ryco-label" for="user-industry">Industry</label>
-            <input type="text" class="ryco-input" id="user-industry"
-              placeholder="e.g., Technology, Healthcare, Finance">
+            <input type="text" class="ryco-input" id="user-industry" placeholder="e.g., Technology, Healthcare, Finance">
           </div>
         </div>
 
         <!-- Professional Details -->
         <div class="ryco-field-group">
           <h4 class="ryco-field-group-title">Professional Details</h4>
-
+          
           <div class="ryco-field">
             <label class="ryco-label" for="user-experience">Years of Experience</label>
             <select class="ryco-select" id="user-experience">
@@ -213,22 +199,20 @@
 
           <div class="ryco-field">
             <label class="ryco-label" for="user-skills">Key Skills / Expertise</label>
-            <input type="text" class="ryco-input" id="user-skills"
-              placeholder="e.g., Python, Marketing, Design, Project Management">
+            <input type="text" class="ryco-input" id="user-skills" placeholder="e.g., Python, Marketing, Design, Project Management">
             <span class="ryco-field-hint">Separate multiple skills with commas</span>
           </div>
 
           <div class="ryco-field">
             <label class="ryco-label" for="user-goals">Professional Goals</label>
-            <textarea class="ryco-textarea" id="user-goals" rows="3"
-              placeholder="e.g., Learn new technologies, improve productivity, grow business"></textarea>
+            <textarea class="ryco-textarea" id="user-goals" rows="3" placeholder="e.g., Learn new technologies, improve productivity, grow business"></textarea>
           </div>
         </div>
 
         <!-- Communication Preferences -->
         <div class="ryco-field-group">
           <h4 class="ryco-field-group-title">Communication Preferences</h4>
-
+          
           <div class="ryco-field">
             <label class="ryco-label" for="user-tone">Preferred Tone</label>
             <select class="ryco-select" id="user-tone">
@@ -265,11 +249,10 @@
         <!-- Additional Context -->
         <div class="ryco-field-group">
           <h4 class="ryco-field-group-title">Additional Context</h4>
-
+          
           <div class="ryco-field">
             <label class="ryco-label" for="user-context">Custom Context / Notes</label>
-            <textarea class="ryco-textarea" id="user-context" rows="4"
-              placeholder="Add any additional information that would help AI understand your needs better..."></textarea>
+            <textarea class="ryco-textarea" id="user-context" rows="4" placeholder="Add any additional information that would help AI understand your needs better..."></textarea>
             <span class="ryco-field-hint">This information will be included in every AI request as context</span>
           </div>
         </div>
@@ -278,14 +261,13 @@
 
         <div class="ryco-info-box">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="16" x2="12" y2="12" />
-            <line x1="12" y1="8" x2="12.01" y2="8" />
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="16" x2="12" y2="12"/>
+            <line x1="12" y1="8" x2="12.01" y2="8"/>
           </svg>
           <div>
             <strong>Privacy Notice</strong>
-            <p>Your information is stored locally on your device and is never sent to external servers. It's only used
-              to enhance AI responses only for you.</p>
+            <p>Your information is stored locally on your device and is never sent to external servers. It's only used to enhance AI responses only for you.</p>
           </div>
         </div>
 
@@ -340,15 +322,28 @@
           <p class="ryco-section-desc">Personalize how Ryco looks and feels.</p>
         </div>
 
-        <div class="ryco-info-box">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="16" x2="12" y2="12"/>
-            <line x1="12" y1="8" x2="12.01" y2="8"/>
-          </svg>
-          <div>
-            <strong>Automatic Theme Detection</strong>
-            <p>Ryco automatically matches your system's theme preference (light or dark mode). The theme updates in real-time when you change your system settings.</p>
+        <div class="ryco-field">
+          <label class="ryco-label">Theme</label>
+          <div class="ryco-radio-group">
+            <label class="ryco-radio-card">
+              <input type="radio" name="theme" value="dark" checked>
+              <span class="ryco-radio-content">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                </svg>
+                <span>Dark</span>
+              </span>
+            </label>
+            <label class="ryco-radio-card">
+              <input type="radio" name="theme" value="light">
+              <span class="ryco-radio-content">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="5"/>
+                  <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                </svg>
+                <span>Light</span>
+              </span>
+            </label>
           </div>
         </div>
 
@@ -384,5 +379,4 @@
 
   <script src="popup.js"></script>
 </body>
-
 </html>

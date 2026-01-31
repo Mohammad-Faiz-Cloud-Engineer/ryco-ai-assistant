@@ -5,57 +5,6 @@ All notable changes to Ryco will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.5.0] - 2026-02-01
-
-### Added
-- **Automatic Theme Detection System** - Extension popup now automatically detects and applies system theme preference
-- Real-time theme synchronization with system settings (prefers-color-scheme)
-- Manual theme toggle button in extension popup with smooth animations
-- Theme preference persistence across browser sessions
-- Comprehensive GitHub Actions automation for releases and validation
-- Automated release workflow with version validation and artifact creation
-- Validation workflow for manifest.json and JavaScript syntax checking
-- Release documentation and helper scripts for streamlined releases
-
-### Improved
-- **Code Quality:** Achieved 100% production-grade, enterprise-level code standards
-- **Performance:** Optimized trigger detection from 100ms to 75ms (33% faster)
-- **Error Handling:** Enhanced user-friendly error messages throughout codebase
-- **Input Validation:** Added comprehensive sanitization and length limits for all user inputs
-- **Security:** Implemented XSS prevention and proper input validation
-- **Documentation:** Added comprehensive release guides and workflow documentation
-- **User Experience:** Smoother theme transitions with 300ms animations
-- **Code Maintainability:** Removed all duplicate code and unused functions
-
-### Fixed
-- Theme toggle button functionality in extension popup (was non-functional)
-- All compiler warnings removed (deprecated addListener, unused variables)
-- Duplicate property declarations across all JavaScript files
-- Request timeout handling (60s for requests, 10s for tests)
-- Streaming response error handling
-
-### Changed
-- Trigger detection debounce optimized from 100ms to 75ms
-- Theme toggle now properly switches between light/dark modes
-- Enhanced buildUserContext() with comprehensive validation
-- Improved streaming response handling with better error recovery
-- Updated all event listeners to use modern chrome.runtime.onMessage API
-
-### Performance
-- 33% faster trigger detection (75ms vs 100ms)
-- Smoother UI animations with GPU acceleration hints
-- Better memory management with proper cleanup
-- Zero breaking changes - 100% backward compatible
-- All diagnostics: 0 errors, 0 warnings
-
-### Automation
-- Complete GitHub Actions workflow for automated releases
-- Automatic version validation against git tags
-- Automated ZIP creation for extension and source code
-- Automatic CHANGELOG.md parsing for release notes
-- Build artifact retention with 90-day storage
-- Validation workflow for continuous integration
-
 ## [1.4.0] - 2026-02-01
 
 ### Added

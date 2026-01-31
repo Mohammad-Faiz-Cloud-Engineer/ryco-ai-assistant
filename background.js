@@ -28,18 +28,18 @@ async function getOrCreateCryptoKey() {
       ['encrypt', 'decrypt']
     );
   }
-
+  
   const key = await crypto.subtle.generateKey(
     { name: 'AES-GCM', length: 256 },
     true,
     ['encrypt', 'decrypt']
   );
-
+  
   const exported = await crypto.subtle.exportKey('raw', key);
-  await chrome.storage.local.set({
-    [CRYPTO_KEY_NAME]: Array.from(new Uint8Array(exported))
+  await chrome.storage.local.set({ 
+    [CRYPTO_KEY_NAME]: Array.from(new Uint8Array(exported)) 
   });
-
+  
   return key;
 }
 
@@ -47,13 +47,13 @@ async function encryptApiKey(plaintext) {
   const key = await getOrCreateCryptoKey();
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const encoded = new TextEncoder().encode(plaintext);
-
+  
   const ciphertext = await crypto.subtle.encrypt(
     { name: 'AES-GCM', iv },
     key,
     encoded
   );
-
+  
   return {
     iv: Array.from(iv),
     data: Array.from(new Uint8Array(ciphertext))
@@ -62,7 +62,7 @@ async function encryptApiKey(plaintext) {
 
 async function decryptApiKey(encrypted) {
   if (!encrypted || !encrypted.iv || !encrypted.data) return null;
-
+  
   try {
     const key = await getOrCreateCryptoKey();
     const decrypted = await crypto.subtle.decrypt(
@@ -88,18 +88,18 @@ const PROVIDERS = {
       'meta/llama-3.1-70b-instruct',
       'meta/llama-3.1-405b-instruct',
       'nvidia/llama-3.1-nemotron-70b-instruct',
-
+      
       // OpenAI GPT-OSS Models (Open Source)
       'openai/gpt-oss-120b',
       'openai/gpt-oss-20b',
-
+      
       // DeepSeek Models
       'deepseek-ai/deepseek-r1',
       'deepseek-ai/deepseek-r1-0528',
       'deepseek-ai/deepseek-v3.1',
       'deepseek-ai/deepseek-v3.1-terminus',
       'deepseek-ai/deepseek-v3.2',
-
+      
       // Mistral Models
       'mistralai/mistral-large-3-675b-instruct-2512',
       'mistralai/mixtral-8x7b-instruct-v0.1',
@@ -140,13 +140,15 @@ async function getSettings() {
   const result = await chrome.storage.local.get([
     'activeProvider',
     'selectedModels',
+    'theme',
     'apiKeys',
     'userDetails'
   ]);
-
+  
   return {
     activeProvider: result.activeProvider || 'openai',
     selectedModels: result.selectedModels || {},
+    theme: result.theme || 'dark',
     apiKeys: result.apiKeys || {},
     userDetails: result.userDetails || {}
   };
@@ -173,86 +175,56 @@ async function getActiveModel() {
 }
 
 // ========== User Context Builder ==========
-/**
- * Builds user context string from user details for AI personalization
- * @param {Object} userDetails - User profile information
- * @returns {string} Formatted context string or empty string
- */
 function buildUserContext(userDetails) {
-  // Validate input
-  if (!userDetails || typeof userDetails !== 'object' || Object.keys(userDetails).length === 0) {
-    return '';
-  }
-
+  if (!userDetails || Object.keys(userDetails).length === 0) return '';
+  
   const parts = [];
-
-  // Sanitize and add each field if present
-  const addField = (key, label) => {
-    const value = userDetails[key];
-    if (value && typeof value === 'string') {
-      const sanitized = value.trim();
-      if (sanitized.length > 0 && sanitized.length <= 500) { // Max 500 chars per field
-        parts.push(`${label}: ${sanitized}`);
-      }
-    }
-  };
-
-  addField('name', 'Name');
-  addField('role', 'Role');
-  addField('company', 'Company');
-  addField('industry', 'Industry');
-  addField('experience', 'Experience');
-  addField('skills', 'Skills');
-  addField('goals', 'Goals');
-  addField('tone', 'Preferred tone');
-  addField('language', 'Language');
-  addField('timezone', 'Timezone');
-  addField('context', 'Additional context');
-
+  
+  if (userDetails.name) parts.push(`Name: ${userDetails.name}`);
+  if (userDetails.role) parts.push(`Role: ${userDetails.role}`);
+  if (userDetails.company) parts.push(`Company: ${userDetails.company}`);
+  if (userDetails.industry) parts.push(`Industry: ${userDetails.industry}`);
+  if (userDetails.experience) parts.push(`Experience: ${userDetails.experience}`);
+  if (userDetails.skills) parts.push(`Skills: ${userDetails.skills}`);
+  if (userDetails.goals) parts.push(`Goals: ${userDetails.goals}`);
+  if (userDetails.tone) parts.push(`Preferred tone: ${userDetails.tone}`);
+  if (userDetails.language) parts.push(`Language: ${userDetails.language}`);
+  if (userDetails.timezone) parts.push(`Timezone: ${userDetails.timezone}`);
+  if (userDetails.context) parts.push(`Additional context: ${userDetails.context}`);
+  
   if (parts.length === 0) return '';
-
-  // Limit total context length to prevent token overflow
-  const contextString = `User Profile: ${parts.join(', ')}.`;
-  return contextString.length > 2000 ? contextString.substring(0, 2000) + '...' : contextString;
+  
+  return `User Profile: ${parts.join(', ')}.`;
 }
 
 // ========== API Request Handler ==========
 async function sendChatRequest(prompt, streamCallback) {
-  // Validate input
-  if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
-    throw new Error('Invalid prompt: prompt must be a non-empty string');
-  }
-
-  if (prompt.length > 10000) {
-    throw new Error('Prompt too long: maximum 10,000 characters');
-  }
-
   const settings = await getSettings();
   const provider = PROVIDERS[settings.activeProvider];
   const apiKey = await getActiveApiKey();
   const model = await getActiveModel();
-
+  
   if (!apiKey) {
     throw new Error(`No API key configured for ${provider.name}`);
   }
-
+  
   // Build user context
   const userContext = buildUserContext(settings.userDetails);
-
+  
   // Handle Gemini separately due to different API format
   if (settings.activeProvider === 'gemini') {
     return await sendGeminiRequest(prompt, model, apiKey, streamCallback, userContext);
   }
-
+  
   // OpenAI-compatible format for NVIDIA and OpenAI
   console.log(`[${settings.activeProvider.toUpperCase()}] Sending request to:`, model);
   const startTime = performance.now();
-
+  
   const headers = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${apiKey}`
   };
-
+  
   const messages = [
     {
       role: 'system',
@@ -263,19 +235,19 @@ async function sendChatRequest(prompt, streamCallback) {
       content: 'Format: Plain text only. No markdown, no code fences (```), no asterisks, no brackets, no symbols. For code, provide it directly without any formatting markers. Write naturally like a human. For emails/business content, be professional but concise.'
     }
   ];
-
+  
   if (userContext) {
     messages.push({
       role: 'system',
       content: userContext
     });
   }
-
+  
   messages.push({
     role: 'user',
     content: prompt
   });
-
+  
   const body = {
     model: model,
     messages: messages,
@@ -286,41 +258,32 @@ async function sendChatRequest(prompt, streamCallback) {
     frequency_penalty: PERFORMANCE_CONFIG.FREQUENCY_PENALTY,
     presence_penalty: PERFORMANCE_CONFIG.PRESENCE_PENALTY
   };
-
+  
   try {
     const response = await fetch(provider.endpoint, {
       method: 'POST',
       headers,
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(60000) // 60 second timeout
+      body: JSON.stringify(body)
     });
-
+    
+    const responseTime = performance.now() - startTime;
+    console.log(`[${settings.activeProvider.toUpperCase()}] Response received in:`, responseTime.toFixed(2), 'ms');
+    console.log(`[${settings.activeProvider.toUpperCase()}] Response status:`, response.status);
+    
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error(`[${settings.activeProvider.toUpperCase()}] Error response:`, errorData);
-      
-      // Provide user-friendly error messages
-      let errorMessage = errorData.error?.message || `API Error: ${response.status}`;
-      
-      if (response.status === 401) {
-        errorMessage = 'Invalid API key. Please check your settings.';
-      } else if (response.status === 429) {
-        errorMessage = 'Rate limit exceeded. Please try again later.';
-      } else if (response.status === 500) {
-        errorMessage = 'Server error. Please try again.';
-      }
-      
-      throw new Error(errorMessage);
+      throw new Error(errorData.error?.message || `API Error: ${response.status}`);
     }
-
-    // Handle SSE streaming with improved error handling
+    
+    // Handle SSE streaming
     const reader = response.body.getReader();
     const decoder = new TextDecoder('utf-8', { fatal: false });
     let fullResponse = '';
     let buffer = '';
     let chunkCount = 0;
     let firstChunkTime = null;
-
+    
     try {
       while (true) {
         const { done, value } = await reader.read();
@@ -333,21 +296,22 @@ async function sendChatRequest(prompt, streamCallback) {
           }
           break;
         }
-
+        
         if (!firstChunkTime) {
           firstChunkTime = performance.now() - startTime;
+          console.log(`[${settings.activeProvider.toUpperCase()}] First chunk received in:`, firstChunkTime.toFixed(2), 'ms');
         }
-
+        
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
         buffer = lines.pop() || '';
-
+        
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             const data = line.slice(6).trim();
             if (data === '[DONE]') continue;
             if (!data) continue;
-
+            
             try {
               const parsed = JSON.parse(data);
               const content = parsed.choices?.[0]?.delta?.content;
@@ -356,9 +320,8 @@ async function sendChatRequest(prompt, streamCallback) {
                 fullResponse += content;
                 streamCallback(content, false);
               }
-            } catch (parseError) {
-              // Skip malformed JSON chunks
-              console.warn(`[${settings.activeProvider.toUpperCase()}] Skipped malformed chunk`);
+            } catch (e) {
+              // Skip malformed JSON
             }
           }
         }
@@ -366,19 +329,13 @@ async function sendChatRequest(prompt, streamCallback) {
     } finally {
       reader.releaseLock();
     }
-
+    
     console.log(`[${settings.activeProvider.toUpperCase()}] Full response length:`, fullResponse.length, 'characters');
     streamCallback('', true);
     return fullResponse;
-
+    
   } catch (error) {
     console.error(`[${settings.activeProvider.toUpperCase()}] Request error:`, error);
-    
-    // Provide user-friendly error messages
-    if (error.name === 'AbortError') {
-      throw new Error('Request timeout. Please try again.');
-    }
-    
     throw error;
   }
 }
@@ -386,13 +343,13 @@ async function sendChatRequest(prompt, streamCallback) {
 // ========== Gemini-specific Request Handler ==========
 async function sendGeminiRequest(prompt, model, apiKey, streamCallback, userContext = '') {
   let systemPrompt = `You are Ryco by Mohammad Faiz. Be extremely concise and direct. No introductions, no preambles, no filler. Get straight to the answer immediately. Keep responses brief and actionable. Format: Plain text only. No markdown, no asterisks, no brackets, no symbols. Write naturally like a human. For emails/business content, be professional but concise.`;
-
+  
   if (userContext) {
     systemPrompt += ` ${userContext}`;
   }
 
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
-
+  
   const body = {
     contents: [
       {
@@ -428,49 +385,36 @@ async function sendGeminiRequest(prompt, model, apiKey, streamCallback, userCont
       }
     ]
   };
-
+  
   console.log('[Gemini] Sending request to:', model);
   const startTime = performance.now();
-
+  
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(60000) // 60 second timeout
+      body: JSON.stringify(body)
     });
-
+    
     const responseTime = performance.now() - startTime;
     console.log('[Gemini] Response received in:', responseTime.toFixed(2), 'ms');
     console.log('[Gemini] Response status:', response.status);
-
+    
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error('[Gemini] Error response:', errorData);
-      
-      // Provide user-friendly error messages
-      let errorMessage = errorData.error?.message || `API Error: ${response.status}`;
-      
-      if (response.status === 401 || response.status === 403) {
-        errorMessage = 'Invalid API key. Please check your Gemini API key.';
-      } else if (response.status === 429) {
-        errorMessage = 'Rate limit exceeded. Please try again later.';
-      } else if (response.status === 500) {
-        errorMessage = 'Gemini server error. Please try again.';
-      }
-      
-      throw new Error(errorMessage);
+      throw new Error(errorData.error?.message || `API Error: ${response.status}`);
     }
-
+    
     const reader = response.body.getReader();
     const decoder = new TextDecoder('utf-8', { fatal: false });
     let fullResponse = '';
     let buffer = '';
     let chunkCount = 0;
     let firstChunkTime = null;
-
+    
     try {
       while (true) {
         const { done, value } = await reader.read();
@@ -481,23 +425,23 @@ async function sendGeminiRequest(prompt, model, apiKey, streamCallback, userCont
           console.log('[Gemini] Average chunk time:', (totalTime / chunkCount).toFixed(2), 'ms');
           break;
         }
-
+        
         if (!firstChunkTime) {
           firstChunkTime = performance.now() - startTime;
           console.log('[Gemini] First chunk received in:', firstChunkTime.toFixed(2), 'ms');
         }
-
+        
         buffer += decoder.decode(value, { stream: true });
-
+        
         // Gemini SSE format: data: {...}
         const lines = buffer.split('\n');
         buffer = lines.pop() || '';
-
+        
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             const data = line.slice(6).trim();
             if (!data) continue;
-
+            
             try {
               const parsed = JSON.parse(data);
               const content = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -506,13 +450,13 @@ async function sendGeminiRequest(prompt, model, apiKey, streamCallback, userCont
                 fullResponse += content;
                 streamCallback(content, false);
               }
-            } catch (parseError) {
-              console.warn('[Gemini] Skipped malformed chunk');
+            } catch (e) {
+              console.error('[Gemini] Parse error:', e, 'Line:', data.substring(0, 100));
             }
           }
         }
       }
-
+      
       // Process any remaining buffer
       if (buffer.trim() && buffer.startsWith('data: ')) {
         try {
@@ -530,19 +474,13 @@ async function sendGeminiRequest(prompt, model, apiKey, streamCallback, userCont
     } finally {
       reader.releaseLock();
     }
-
+    
     console.log('[Gemini] Full response length:', fullResponse.length, 'characters');
     streamCallback('', true);
     return fullResponse;
-
+    
   } catch (error) {
     console.error('[Gemini] Request error:', error);
-    
-    // Provide user-friendly error messages
-    if (error.name === 'AbortError') {
-      throw new Error('Request timeout. Please try again.');
-    }
-    
     throw error;
   }
 }
@@ -553,14 +491,9 @@ async function testConnection(provider, apiKey) {
   if (!config) {
     throw new Error(`Unknown provider: ${provider}`);
   }
-
-  // Validate API key format
-  if (!apiKey || typeof apiKey !== 'string' || apiKey.trim().length === 0) {
-    throw new Error('Invalid API key format');
-  }
-
+  
   console.log(`[TEST] Testing connection for ${provider}...`);
-
+  
   // Handle Gemini separately
   if (provider === 'gemini') {
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${config.defaultModel}:generateContent?key=${apiKey}`;
@@ -572,65 +505,50 @@ async function testConnection(provider, apiKey) {
         }
       ]
     };
-
+    
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(10000) // 10 second timeout for test
+      body: JSON.stringify(body)
     });
-
+    
     console.log(`[TEST] Gemini response status:`, response.status);
-
+    
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error(`[TEST] Gemini error:`, errorData);
-      
-      let errorMessage = errorData.error?.message || `Connection failed: ${response.status}`;
-      if (response.status === 401 || response.status === 403) {
-        errorMessage = 'Invalid API key';
-      }
-      
-      throw new Error(errorMessage);
+      throw new Error(errorData.error?.message || `Connection failed: ${response.status}`);
     }
-
+    
     console.log(`[TEST] Gemini connection successful`);
     return { success: true, provider: config.name };
   }
-
+  
   // OpenAI-compatible format for NVIDIA and OpenAI
   const headers = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${apiKey}`
   };
-
+  
   const body = {
     model: config.defaultModel,
-    messages: [{ role: 'user', content: 'Hi' }],
-    max_tokens: 10
+    messages: [{ role: 'user', content: 'Hi' }]
   };
-
+  
   const response = await fetch(config.endpoint, {
     method: 'POST',
     headers,
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(10000) // 10 second timeout for test
+    body: JSON.stringify(body)
   });
-
+  
   console.log(`[TEST] ${provider.toUpperCase()} response status:`, response.status);
-
+  
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     console.error(`[TEST] ${provider.toUpperCase()} error:`, errorData);
-    
-    let errorMessage = errorData.error?.message || `Connection failed: ${response.status}`;
-    if (response.status === 401) {
-      errorMessage = 'Invalid API key';
-    }
-    
-    throw new Error(errorMessage);
+    throw new Error(errorData.error?.message || `Connection failed: ${response.status}`);
   }
-
+  
   console.log(`[TEST] ${provider.toUpperCase()} connection successful`);
   return { success: true, provider: config.name };
 }
@@ -654,34 +572,32 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           );
           return { success: true, response: fullResponse };
         }
-
+        
         case 'RYCO_TEST_CONNECTION': {
           const result = await testConnection(message.provider, message.apiKey);
           return { success: true, ...result };
         }
-
+        
         case 'RYCO_SAVE_API_KEY': {
           await saveApiKey(message.provider, message.apiKey);
           return { success: true };
         }
-
+        
         case 'RYCO_GET_SETTINGS': {
           const settings = await getSettings();
           return { success: true, settings, providers: PROVIDERS };
         }
-
+        
         case 'RYCO_UPDATE_SETTINGS': {
           await chrome.storage.local.set(message.settings);
           return { success: true };
         }
-
-        /*
+        
         case 'RYCO_GET_THEME': {
-           // Deprecated
-           return { success: true, theme: 'system' };
+          const settings = await getSettings();
+          return { success: true, theme: settings.theme };
         }
-        */
-
+        
         default:
           return { success: false, error: 'Unknown message type' };
       }
@@ -689,7 +605,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return { success: false, error: error.message };
     }
   };
-
+  
   handleAsync().then(sendResponse);
   return true; // Keep channel open for async response
 });
@@ -701,10 +617,11 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     await chrome.storage.local.set({
       activeProvider: 'openai',
       selectedModels: {},
+      theme: 'dark',
       apiKeys: {},
       userDetails: {}
     });
-
+    
     console.log('Ryco installed successfully');
   }
 });

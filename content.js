@@ -8,12 +8,10 @@
 
     // ========== Configuration ==========
     const TRIGGER_PATTERN = /@Ryco\s+(.+?)\/\/$/im;
-    const DEBOUNCE_DELAY = 75; // Optimized from 100ms to 75ms for 33% faster detection
-    const MIN_PROMPT_LENGTH = 2;
-    const MAX_PROMPT_LENGTH = 2000;
+    const DEBOUNCE_DELAY = 100; // Optimized for snappier UX
 
     // ========== State ==========
-    let currentTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    let currentTheme = 'dark';
     let activeCommandBar = null;
     let toastContainer = null;
     let currentRequestId = null;
@@ -61,20 +59,17 @@
         return element.selectionStart || 0;
     }
 
-    // ========== Theme Management ==========
-    function updateTheme(e) {
-        currentTheme = e.matches ? 'dark' : 'light';
-        // Update any active UI elements
-        if (toastContainer && toastContainer.wrapper) {
-            toastContainer.wrapper.setAttribute('data-theme', currentTheme);
-        }
-        if (activeCommandBar && activeCommandBar.wrapper) {
-            activeCommandBar.wrapper.setAttribute('data-theme', currentTheme);
+    // ========== Theme Loading ==========
+    async function loadTheme() {
+        try {
+            const response = await chrome.runtime.sendMessage({ type: 'RYCO_GET_THEME' });
+            if (response?.success) {
+                currentTheme = response.theme;
+            }
+        } catch (e) {
+            // Use default theme
         }
     }
-
-    // Listen for system theme changes
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme);
 
     // ========== Shadow DOM Setup ==========
     function createShadowHost() {
@@ -334,7 +329,7 @@
         const dragStart = (e) => {
             // Prevent text selection during drag
             e.preventDefault();
-
+            
             const rect = commandBar.getBoundingClientRect();
             initialX = e.clientX - rect.left;
             initialY = e.clientY - rect.top;
@@ -424,37 +419,26 @@
     function insertResponse() {
         if (!activeCommandBar || !activeElement || !triggerMatch) return;
 
-        try {
-            const currentValue = getElementValue(activeElement);
-            const newValue = currentValue.substring(0, triggerMatch.start) +
-                activeCommandBar.response +
-                currentValue.substring(triggerMatch.end);
+        const currentValue = getElementValue(activeElement);
+        const newValue = currentValue.substring(0, triggerMatch.start) +
+            activeCommandBar.response +
+            currentValue.substring(triggerMatch.end);
 
-            setElementValue(activeElement, newValue);
-            
-            // Set cursor position after inserted text
-            const newCursorPos = triggerMatch.start + activeCommandBar.response.length;
-            if (activeElement.setSelectionRange) {
-                activeElement.setSelectionRange(newCursorPos, newCursorPos);
-            }
-            
-            closeCommandBar();
-            showToast('success', 'Inserted', 'Response inserted successfully');
-        } catch (error) {
-            console.error('[Ryco] Insert error:', error);
-            showToast('error', 'Insert Failed', 'Could not insert response');
-        }
+        setElementValue(activeElement, newValue);
+        closeCommandBar();
+
+        showToast('success', 'Inserted', 'Response inserted successfully');
     }
 
     function closeCommandBar() {
         if (activeCommandBar) {
             activeCommandBar.commandBar.classList.add('closing');
-
+            
             // Cleanup drag listeners
             if (activeCommandBar.commandBar._dragCleanup) {
                 activeCommandBar.commandBar._dragCleanup();
             }
-
+            
             setTimeout(() => {
                 activeCommandBar.host.remove();
                 activeCommandBar = null;
@@ -469,34 +453,17 @@
 
     async function sendPromptToBackground(prompt) {
         if (!activeCommandBar) return;
-
+        
         try {
-            const response = await chrome.runtime.sendMessage({
+            await chrome.runtime.sendMessage({
                 type: 'RYCO_CHAT',
                 prompt,
                 requestId: currentRequestId
             });
-            
-            // Handle immediate errors
-            if (response && !response.success) {
-                throw new Error(response.error || 'Request failed');
-            }
         } catch (error) {
             console.error('[Ryco] Failed to send prompt:', error);
-            
-            // Show user-friendly error message
-            const errorMessage = error.message || 'Failed to send request';
-            showToast('error', 'Request Failed', errorMessage);
-            
-            // Update command bar with error state
-            if (activeCommandBar && activeCommandBar.responseArea) {
-                activeCommandBar.loadingSkeleton?.remove();
-                activeCommandBar.responseArea.innerHTML = `
-                    <div style="color: var(--ryco-error); padding: var(--ryco-space-3); text-align: center;">
-                        <strong>Error:</strong> ${escapeHtml(errorMessage)}
-                    </div>
-                `;
-            }
+            showToast('error', 'Error', error.message || 'Failed to send request');
+            closeCommandBar();
         }
     }
 
@@ -515,7 +482,7 @@
 
         try {
             // Hide loading skeleton on first chunk
-            if (activeCommandBar.loadingSkeleton && activeCommandBar.loadingSkeleton.parentNode) {
+            if (activeCommandBar.loadingSkeleton) {
                 activeCommandBar.loadingSkeleton.remove();
                 activeCommandBar.loadingSkeleton = null;
                 activeCommandBar.responseArea.innerHTML = '';
@@ -523,45 +490,29 @@
 
             if (message.chunk) {
                 activeCommandBar.response += message.chunk;
-                
-                // Use textContent for better performance and security
-                activeCommandBar.responseArea.textContent = activeCommandBar.response;
-                
-                // Add cursor if not done
-                if (!message.isDone) {
-                    const cursor = document.createElement('span');
-                    cursor.className = 'ryco-cursor';
-                    activeCommandBar.responseArea.appendChild(cursor);
-                }
+                activeCommandBar.responseArea.innerHTML =
+                    escapeHtml(activeCommandBar.response) +
+                    (message.isDone ? '' : '<span class="ryco-cursor"></span>');
             }
 
             if (message.isDone) {
-                // Ensure cursor is removed when done
+                // Remove cursor when done
                 const cursor = activeCommandBar.responseArea.querySelector('.ryco-cursor');
                 cursor?.remove();
             }
         } catch (error) {
             console.error('[Ryco] Stream chunk error:', error);
-            showToast('error', 'Streaming Error', 'Failed to process response chunk');
         }
     }
 
     // ========== Trigger Detection ==========
     function checkForTrigger(element) {
         const value = getElementValue(element);
-        
-        // Early exit for empty or very short values
-        if (!value || value.length < 10) return;
-        
         const match = value.match(TRIGGER_PATTERN);
 
         if (match) {
             const prompt = match[1].trim();
-            
-            // Validate prompt length
-            if (prompt.length < MIN_PROMPT_LENGTH || prompt.length > MAX_PROMPT_LENGTH) {
-                return;
-            }
+            if (prompt.length < 2) return; // Minimum prompt length
 
             const matchStart = match.index;
             const matchEnd = matchStart + match[0].length;
@@ -586,28 +537,28 @@
         if (!element) return false;
 
         const tagName = element.tagName?.toLowerCase();
-
+        
         // Standard input fields
         if (tagName === 'input') {
             const type = element.type?.toLowerCase();
             // Support more input types
             return ['text', 'search', 'email', 'url', 'tel', 'number', ''].includes(type);
         }
-
+        
         // Textarea
         if (tagName === 'textarea') return true;
-
+        
         // ContentEditable elements
         if (element.isContentEditable) return true;
         if (element.getAttribute('contenteditable') === 'true') return true;
-
+        
         // Check for common rich text editor attributes
         if (element.getAttribute('role') === 'textbox') return true;
         if (element.classList?.contains('ql-editor')) return true; // Quill editor
         if (element.classList?.contains('tox-edit-area')) return true; // TinyMCE
         if (element.classList?.contains('ProseMirror')) return true; // ProseMirror
         if (element.classList?.contains('DraftEditor-editorContainer')) return true; // Draft.js
-
+        
         return false;
     }
 
@@ -635,7 +586,7 @@
     // Use capturing to catch events before they're handled
     document.addEventListener('input', handleInput, true);
     document.addEventListener('keyup', handleKeyUp, true);
-
+    
     // Also listen on focus to catch dynamically added elements
     document.addEventListener('focus', (e) => {
         if (isEditableElement(e.target) && !trackedElements.has(e.target)) {
@@ -647,7 +598,7 @@
 
     // ========== MutationObserver for Dynamic Content ==========
     const trackedDynamicElements = new WeakSet();
-
+    
     const observerCallback = debounce((mutations) => {
         for (const mutation of mutations) {
             for (const node of mutation.addedNodes) {
@@ -691,6 +642,7 @@
     }
 
     // ========== Initialize ==========
+    loadTheme();
     initToastContainer();
 
     console.log('Ryco Content Script loaded');

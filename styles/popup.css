@@ -132,64 +132,45 @@ body {
     color: var(--ryco-text-tertiary);
 }
 
-/* Theme Toggle Button */
 .ryco-theme-toggle {
-    width: 40px;
-    height: 40px;
-    border-radius: var(--ryco-radius-md);
-    border: 1px solid var(--ryco-border-default);
-    background: var(--ryco-bg-tertiary);
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
+    background: var(--ryco-bg-tertiary);
+    border: 1px solid var(--ryco-border-default);
+    border-radius: var(--ryco-radius-md);
     cursor: pointer;
-    transition: all var(--ryco-transition-base);
-    position: relative;
-    padding: 0;
+    transition: all var(--ryco-transition-fast);
 }
 
 .ryco-theme-toggle:hover {
-    border-color: var(--ryco-accent);
     background: var(--ryco-bg-elevated);
-    transform: scale(1.05);
+    border-color: var(--ryco-border-strong);
 }
 
-.ryco-theme-toggle:active {
-    transform: scale(0.95);
+.ryco-theme-toggle svg {
+    width: 18px;
+    height: 18px;
+    color: var(--ryco-text-secondary);
 }
 
-.ryco-icon-sun,
-.ryco-icon-moon {
-    width: 20px;
-    height: 20px;
-    color: var(--ryco-text-primary);
-    position: absolute;
-    transition: opacity 0.3s ease, transform 0.3s ease;
+body .icon-dark {
+    display: none;
 }
 
-/* Light theme - show moon icon */
-body.light .ryco-icon-sun {
-    opacity: 1;
-    transform: rotate(0deg) scale(1);
+body .icon-light {
+    display: block;
 }
 
-body.light .ryco-icon-moon {
-    opacity: 0;
-    transform: rotate(180deg) scale(0);
+body.light .icon-dark {
+    display: block;
 }
 
-/* Dark theme - show sun icon */
-body:not(.light) .ryco-icon-sun {
-    opacity: 0;
-    transform: rotate(-180deg) scale(0);
+body.light .icon-light {
+    display: none;
 }
-
-body:not(.light) .ryco-icon-moon {
-    opacity: 1;
-    transform: rotate(0deg) scale(1);
-}
-
-
 
 /* ========== Tabs ========== */
 .ryco-tabs {
@@ -627,7 +608,6 @@ body:not(.light) .ryco-icon-moon {
     background: var(--ryco-bg-secondary);
     border: 1px solid var(--ryco-border-subtle);
     border-radius: var(--ryco-radius-lg);
-    transition: background-color var(--ryco-transition-base), border-color var(--ryco-transition-base);
 }
 
 .ryco-field-group-title {
@@ -652,7 +632,6 @@ body:not(.light) .ryco-icon-moon {
     transition: all var(--ryco-transition-fast);
     resize: vertical;
     min-height: 60px;
-    line-height: 1.5;
 }
 
 .ryco-textarea::placeholder {
@@ -669,7 +648,6 @@ body:not(.light) .ryco-icon-moon {
     font-size: var(--ryco-font-size-xs);
     color: var(--ryco-text-tertiary);
     margin-top: var(--ryco-space-1);
-    line-height: 1.4;
 }
 
 .ryco-info-box {
