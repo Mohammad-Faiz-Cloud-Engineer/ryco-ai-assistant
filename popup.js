@@ -7,7 +7,6 @@
 let settings = {
     activeProvider: 'openai',
     selectedModels: {},
-    theme: 'dark',
     apiKeys: {},
     userDetails: {
         name: '',
@@ -29,7 +28,6 @@ let providers = {};
 // ========== DOM Elements ==========
 const elements = {
     app: document.getElementById('app'),
-    themeToggle: document.getElementById('themeToggle'),
     saveKeys: document.getElementById('saveKeys'),
     saveUserDetails: document.getElementById('saveUserDetails'),
     providerSelect: document.getElementById('providerSelect'),
@@ -62,16 +60,12 @@ async function loadSettings() {
             settings = response.settings;
             providers = response.providers;
 
-            // Apply theme
-            applyTheme(settings.theme);
+            // Apply system theme
+            applySystemTheme();
 
             // Set active provider radio
             const providerRadio = document.querySelector(`input[name="provider"][value="${settings.activeProvider}"]`);
             if (providerRadio) providerRadio.checked = true;
-
-            // Set theme radio
-            const themeRadio = document.querySelector(`input[name="theme"][value="${settings.theme}"]`);
-            if (themeRadio) themeRadio.checked = true;
 
             // Load user details
             loadUserDetails();
@@ -115,13 +109,7 @@ function loadUserDetails() {
     }
 }
 
-function applyTheme(theme) {
-    if (theme === 'light') {
-        document.body.classList.add('light');
-    } else {
-        document.body.classList.remove('light');
-    }
-}
+
 
 // ========== Event Listeners ==========
 function setupEventListeners() {
@@ -130,17 +118,16 @@ function setupEventListeners() {
         tab.addEventListener('click', () => switchTab(tab.dataset.tab));
     });
 
-    // Theme toggle button
-    elements.themeToggle.addEventListener('click', toggleTheme);
-
-    // Theme radio buttons
-    document.querySelectorAll('input[name="theme"]').forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            settings.theme = e.target.value;
-            applyTheme(settings.theme);
-            saveSettings({ theme: settings.theme });
+    // Theme toggle button - properly toggle between light and dark
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            toggleTheme();
         });
-    });
+    }
+
+    // System theme listener
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applySystemTheme);
 
     // Provider selection
     document.querySelectorAll('input[name="provider"]').forEach(radio => {
@@ -173,21 +160,32 @@ function switchTab(tabId) {
     });
 }
 
-// ========== Theme Toggle ==========
+// ========== Theme Management ==========
 function toggleTheme() {
-    settings.theme = settings.theme === 'dark' ? 'light' : 'dark';
-    applyTheme(settings.theme);
+    const isCurrentlyLight = document.body.classList.contains('light');
+    
+    if (isCurrentlyLight) {
+        // Switch to dark
+        document.body.classList.remove('light');
+    } else {
+        // Switch to light
+        document.body.classList.add('light');
+    }
+}
 
-    const themeRadio = document.querySelector(`input[name="theme"][value="${settings.theme}"]`);
-    if (themeRadio) themeRadio.checked = true;
-
-    saveSettings({ theme: settings.theme });
+function applySystemTheme() {
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (isDark) {
+        document.body.classList.remove('light');
+    } else {
+        document.body.classList.add('light');
+    }
 }
 
 // ========== Model Selectors ==========
 function renderModelSelectors() {
     if (!elements.modelSection) return;
-    
+
     elements.modelSection.innerHTML = '';
 
     for (const [key, provider] of Object.entries(providers)) {
@@ -223,16 +221,22 @@ function renderModelSelectors() {
 async function testConnection(provider) {
     const input = document.getElementById(`key-${provider}`);
     const statusEl = document.getElementById(`status-${provider}`);
-    
+
     if (!input || !statusEl) {
         console.error('[Ryco] Missing DOM elements for provider:', provider);
         return;
     }
-    
+
     const apiKey = input.value.trim();
 
     if (!apiKey) {
         updateStatus(statusEl, 'error', 'Enter an API key first');
+        return;
+    }
+
+    // Validate API key format
+    if (apiKey.length < 10) {
+        updateStatus(statusEl, 'error', 'API key too short');
         return;
     }
 
@@ -246,19 +250,21 @@ async function testConnection(provider) {
         });
 
         if (response?.success) {
-            updateStatus(statusEl, 'connected', 'Connected');
+            updateStatus(statusEl, 'connected', 'Connected ✓');
         } else {
-            updateStatus(statusEl, 'error', response?.error || 'Connection failed');
+            const errorMsg = response?.error || 'Connection failed';
+            updateStatus(statusEl, 'error', errorMsg);
         }
     } catch (error) {
         console.error('[Ryco] Test connection error:', error);
-        updateStatus(statusEl, 'error', error.message || 'Connection failed');
+        const errorMsg = error.message || 'Connection failed';
+        updateStatus(statusEl, 'error', errorMsg);
     }
 }
 
 function updateStatus(element, status, text) {
     if (!element) return;
-    
+
     element.className = `ryco-status ${status}`;
     const textEl = element.querySelector('.ryco-status-text');
     if (textEl) {
@@ -269,41 +275,55 @@ function updateStatus(element, status, text) {
 async function saveAllKeys() {
     const btn = elements.saveKeys;
     if (!btn) return;
-    
+
+    const originalText = btn.textContent;
     btn.disabled = true;
     btn.textContent = 'Saving...';
 
     try {
         const providerIds = ['nvidia', 'gemini', 'openai'];
         let savedCount = 0;
+        const errors = [];
 
         for (const provider of providerIds) {
             const input = document.getElementById(`key-${provider}`);
             if (!input) continue;
-            
+
             const apiKey = input.value.trim();
 
             if (apiKey) {
-                const response = await chrome.runtime.sendMessage({
-                    type: 'RYCO_SAVE_API_KEY',
-                    provider,
-                    apiKey
-                });
+                try {
+                    const response = await chrome.runtime.sendMessage({
+                        type: 'RYCO_SAVE_API_KEY',
+                        provider,
+                        apiKey
+                    });
 
-                if (response?.success) {
-                    savedCount++;
-                    // Update status
-                    const statusEl = document.getElementById(`status-${provider}`);
-                    if (statusEl) {
-                        updateStatus(statusEl, 'connected', 'Key saved');
+                    if (response?.success) {
+                        savedCount++;
+                        // Update status
+                        const statusEl = document.getElementById(`status-${provider}`);
+                        if (statusEl) {
+                            updateStatus(statusEl, 'connected', 'Key saved ✓');
+                        }
+                    } else {
+                        errors.push(`${provider}: ${response?.error || 'Failed'}`);
                     }
+                } catch (error) {
+                    errors.push(`${provider}: ${error.message}`);
                 }
             }
         }
 
-        btn.textContent = savedCount > 0 ? `Saved ${savedCount} key(s)!` : 'No keys to save';
+        if (errors.length > 0) {
+            btn.textContent = `Saved ${savedCount}, ${errors.length} failed`;
+            console.error('[Ryco] Save errors:', errors);
+        } else {
+            btn.textContent = savedCount > 0 ? `Saved ${savedCount} key(s) ✓` : 'No keys to save';
+        }
+        
         setTimeout(() => {
-            btn.textContent = 'Save All Keys';
+            btn.textContent = originalText;
             btn.disabled = false;
         }, 2000);
 
@@ -311,7 +331,7 @@ async function saveAllKeys() {
         console.error('[Ryco] Save keys error:', error);
         btn.textContent = 'Error saving';
         setTimeout(() => {
-            btn.textContent = 'Save All Keys';
+            btn.textContent = originalText;
             btn.disabled = false;
         }, 2000);
     }
@@ -322,12 +342,14 @@ function updateProviderStatuses() {
 
     for (const provider of providerIds) {
         const statusEl = document.getElementById(`status-${provider}`);
+        if (!statusEl) continue;
+        
         const hasKey = settings.apiKeys[provider] &&
             settings.apiKeys[provider].iv &&
             settings.apiKeys[provider].data;
 
         if (hasKey) {
-            updateStatus(statusEl, 'connected', 'Key configured');
+            updateStatus(statusEl, 'connected', 'Key configured ✓');
         } else {
             updateStatus(statusEl, '', 'Not configured');
         }
@@ -351,30 +373,50 @@ async function saveUserDetails() {
     const btn = elements.saveUserDetails;
     if (!btn) return;
 
+    const originalText = btn.textContent;
     btn.disabled = true;
     btn.textContent = 'Saving...';
 
     try {
-        const userDetails = {
-            name: document.getElementById('user-name')?.value.trim() || '',
-            role: document.getElementById('user-role')?.value.trim() || '',
-            company: document.getElementById('user-company')?.value.trim() || '',
-            industry: document.getElementById('user-industry')?.value.trim() || '',
-            experience: document.getElementById('user-experience')?.value || '',
-            skills: document.getElementById('user-skills')?.value.trim() || '',
-            goals: document.getElementById('user-goals')?.value.trim() || '',
-            tone: document.getElementById('user-tone')?.value || '',
-            language: document.getElementById('user-language')?.value || 'English',
-            timezone: document.getElementById('user-timezone')?.value.trim() || '',
-            context: document.getElementById('user-context')?.value.trim() || ''
+        // Helper function to sanitize and validate input
+        const sanitizeInput = (value, maxLength = 500) => {
+            if (!value || typeof value !== 'string') return '';
+            const trimmed = value.trim();
+            return trimmed.length > maxLength ? trimmed.substring(0, maxLength) : trimmed;
         };
+
+        const userDetails = {
+            name: sanitizeInput(document.getElementById('user-name')?.value, 100),
+            role: sanitizeInput(document.getElementById('user-role')?.value, 100),
+            company: sanitizeInput(document.getElementById('user-company')?.value, 100),
+            industry: sanitizeInput(document.getElementById('user-industry')?.value, 100),
+            experience: sanitizeInput(document.getElementById('user-experience')?.value, 50),
+            skills: sanitizeInput(document.getElementById('user-skills')?.value, 300),
+            goals: sanitizeInput(document.getElementById('user-goals')?.value, 500),
+            tone: sanitizeInput(document.getElementById('user-tone')?.value, 50),
+            language: sanitizeInput(document.getElementById('user-language')?.value, 50),
+            timezone: sanitizeInput(document.getElementById('user-timezone')?.value, 50),
+            context: sanitizeInput(document.getElementById('user-context')?.value, 1000)
+        };
+
+        // Validate at least one field is filled
+        const hasData = Object.values(userDetails).some(val => val.length > 0);
+        
+        if (!hasData) {
+            btn.textContent = 'No data to save';
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }, 2000);
+            return;
+        }
 
         settings.userDetails = userDetails;
         await saveSettings({ userDetails });
 
-        btn.textContent = 'Saved Successfully!';
+        btn.textContent = 'Saved Successfully ✓';
         setTimeout(() => {
-            btn.textContent = 'Save User Details';
+            btn.textContent = originalText;
             btn.disabled = false;
         }, 2000);
 
@@ -382,7 +424,7 @@ async function saveUserDetails() {
         console.error('[Ryco] Save user details error:', error);
         btn.textContent = 'Error saving';
         setTimeout(() => {
-            btn.textContent = 'Save User Details';
+            btn.textContent = originalText;
             btn.disabled = false;
         }, 2000);
     }
