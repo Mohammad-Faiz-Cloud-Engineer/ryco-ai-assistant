@@ -3,6 +3,16 @@
  * The central "Brain" that routes requests to NVIDIA, Gemini, or OpenAI
  */
 
+// ========== Performance Constants ==========
+const PERFORMANCE_CONFIG = {
+  TEMPERATURE: 0.7,
+  MAX_TOKENS: 8192,
+  TOP_P: 0.95,
+  TOP_K: 40,
+  FREQUENCY_PENALTY: 0.0,
+  PRESENCE_PENALTY: 0.0
+};
+
 // ========== Crypto Utilities ==========
 const CRYPTO_KEY_NAME = 'ryco-encryption-key';
 
@@ -242,11 +252,11 @@ async function sendChatRequest(prompt, streamCallback) {
     model: model,
     messages: messages,
     stream: true,
-    temperature: 0.7,
-    max_tokens: 8192,
-    top_p: 0.95,
-    frequency_penalty: 0.0,
-    presence_penalty: 0.0
+    temperature: PERFORMANCE_CONFIG.TEMPERATURE,
+    max_tokens: PERFORMANCE_CONFIG.MAX_TOKENS,
+    top_p: PERFORMANCE_CONFIG.TOP_P,
+    frequency_penalty: PERFORMANCE_CONFIG.FREQUENCY_PENALTY,
+    presence_penalty: PERFORMANCE_CONFIG.PRESENCE_PENALTY
   };
   
   try {
@@ -350,11 +360,11 @@ async function sendGeminiRequest(prompt, model, apiKey, streamCallback, userCont
       }
     ],
     generationConfig: {
-      temperature: 0.7,
-      topK: 40,
-      topP: 0.95,
+      temperature: PERFORMANCE_CONFIG.TEMPERATURE,
+      topK: PERFORMANCE_CONFIG.TOP_K,
+      topP: PERFORMANCE_CONFIG.TOP_P,
       candidateCount: 1,
-      maxOutputTokens: 8192
+      maxOutputTokens: PERFORMANCE_CONFIG.MAX_TOKENS
     },
     safetySettings: [
       {
