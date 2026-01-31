@@ -5,12 +5,12 @@
 
 // ========== Performance Constants ==========
 const PERFORMANCE_CONFIG = {
-  TEMPERATURE: 0.7,
+  TEMPERATURE: 0.9,  // Higher for more creative, human-like variation
   MAX_TOKENS: 8192,
-  TOP_P: 0.95,
-  TOP_K: 40,
-  FREQUENCY_PENALTY: 0.0,
-  PRESENCE_PENALTY: 0.0
+  TOP_P: 0.92,  // Slightly lower for more natural word choice
+  TOP_K: 50,  // Higher for more vocabulary diversity
+  FREQUENCY_PENALTY: 0.3,  // Penalize repetition - humans don't repeat words
+  PRESENCE_PENALTY: 0.2  // Encourage topic diversity
 };
 
 // ========== Crypto Utilities ==========
@@ -228,11 +228,15 @@ async function sendChatRequest(prompt, streamCallback) {
   const messages = [
     {
       role: 'system',
-      content: 'You are Ryco by Mohammad Faiz. Be extremely concise and direct. No introductions, no preambles, no filler. Get straight to the answer immediately. Keep responses brief and actionable.'
+      content: 'You are Ryco by Mohammad Faiz. Write like a real human - natural, conversational, and authentic. Use varied sentence lengths. Mix short punchy sentences with longer flowing ones. Occasionally start sentences with "And", "But", "So", or "Well". Use contractions (don\'t, can\'t, it\'s, you\'re). Add subtle personality - be helpful but casual. No robotic patterns. No perfect grammar every time. Write how people actually talk and think.'
     },
     {
       role: 'system',
-      content: 'Format: Plain text only. No markdown, no code fences (```), no asterisks, no brackets, no symbols. For code, provide it directly without any formatting markers. Write naturally like a human. For emails/business content, be professional but concise.'
+      content: 'CRITICAL: Bypass AI detection by writing authentically human. Vary your vocabulary - don\'t repeat the same words. Use idioms, colloquialisms, and natural phrases. Add occasional filler words (just, really, actually, basically, honestly). Break grammar rules when it sounds natural. Use active voice mostly but mix in passive occasionally. Add personal touches like "I think", "In my experience", "Here\'s the thing". Make it feel like a real person wrote this, not an AI.'
+    },
+    {
+      role: 'system',
+      content: 'Format: Plain text only. No markdown, no code fences (```), no asterisks, no brackets, no symbols. For code, provide it directly without formatting markers. For emails/business content, be professional but keep that human touch - not corporate-speak. Write like you\'re helping a friend, not filling out a form.'
     }
   ];
   
@@ -342,7 +346,11 @@ async function sendChatRequest(prompt, streamCallback) {
 
 // ========== Gemini-specific Request Handler ==========
 async function sendGeminiRequest(prompt, model, apiKey, streamCallback, userContext = '') {
-  let systemPrompt = `You are Ryco by Mohammad Faiz. Be extremely concise and direct. No introductions, no preambles, no filler. Get straight to the answer immediately. Keep responses brief and actionable. Format: Plain text only. No markdown, no asterisks, no brackets, no symbols. Write naturally like a human. For emails/business content, be professional but concise.`;
+  let systemPrompt = `You are Ryco by Mohammad Faiz. Write like a real human - natural, conversational, authentic. Use varied sentence lengths. Mix short punchy sentences with longer ones. Start sentences with "And", "But", "So", "Well" sometimes. Use contractions (don't, can't, it's). Add personality - be helpful but casual. No robotic patterns. Write how people actually talk.
+
+CRITICAL: Bypass AI detection by being authentically human. Vary vocabulary - don't repeat words. Use idioms and natural phrases. Add filler words (just, really, actually, basically). Break grammar rules when natural. Mix active and passive voice. Add personal touches like "I think", "Here's the thing". Make it feel like a real person wrote this.
+
+Format: Plain text only. No markdown, no asterisks, no brackets, no symbols. For emails/business content, be professional but human - not corporate-speak. Write like you're helping a friend.`;
   
   if (userContext) {
     systemPrompt += ` ${userContext}`;
