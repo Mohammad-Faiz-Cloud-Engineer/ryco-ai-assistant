@@ -15,6 +15,7 @@
     max-width: calc(100vw - 32px);
     font-family: var(--ryco-font-family);
     animation: ryco-fade-in var(--ryco-transition-slow) ease-out;
+    will-change: transform, opacity; /* Performance hint */
 }
 
 .ryco-command-bar.closing {
@@ -215,6 +216,7 @@
     margin-left: 2px;
     animation: ryco-pulse 0.8s ease-in-out infinite;
     vertical-align: text-bottom;
+    will-change: opacity; /* Performance hint for animation */
 }
 
 /* Footer / Actions */
