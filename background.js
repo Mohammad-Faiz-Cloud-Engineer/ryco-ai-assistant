@@ -9,8 +9,8 @@ const PERFORMANCE_CONFIG = {
   MAX_TOKENS: 8192,
   TOP_P: 0.85,  // Lower for more diverse, unexpected choices
   TOP_K: 80,  // Very high for maximum vocabulary diversity
-  FREQUENCY_PENALTY: 0.7,  // Very strong anti-repetition
-  PRESENCE_PENALTY: 0.6  // Very strong topic diversity
+  FREQUENCY_PENALTY: 0.5,  // Moderate anti-repetition
+  PRESENCE_PENALTY: 0.4  // Moderate topic diversity
 };
 
 // ========== Crypto Utilities ==========
@@ -253,10 +253,18 @@ function buildUserContext(userDetails) {
     return '';
   }
   
-  // Sanitize function to prevent injection attacks
+  // Sanitize function to prevent injection attacks and XSS
   const sanitize = (value) => {
     if (typeof value !== 'string') return '';
-    return value.trim().replace(/[<>]/g, '').substring(0, 500); // Limit length
+    // Remove HTML tags, script tags, and dangerous characters
+    return value
+      .trim()
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/<[^>]+>/g, '')
+      .replace(/[<>'"]/g, '')
+      .replace(/javascript:/gi, '')
+      .replace(/on\w+\s*=/gi, '')
+      .substring(0, 500); // Strict length limit
   };
   
   const parts = [];
