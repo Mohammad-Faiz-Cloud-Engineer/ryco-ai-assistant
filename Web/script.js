@@ -864,26 +864,24 @@ document.addEventListener('keydown', (e) => {
 });
 
 /**
- * Formats markdown to HTML with comprehensive XSS protection
+ * Formats markdown to HTML with XSS protection
  * @param {string} markdown - Markdown text to format
  * @returns {string} Sanitized HTML
  */
 function formatMarkdown(markdown) {
     if (!markdown || typeof markdown !== 'string') return '';
     
-    // Comprehensive HTML escape to prevent XSS
+    // Escape HTML to prevent XSS
     const escapeHtml = (text) => {
         if (typeof text !== 'string') return '';
         const div = document.createElement('div');
         div.textContent = text;
-        return div.innerHTML
-            .replace(/javascript:/gi, '')
-            .replace(/on\w+\s*=/gi, '');
+        return div.innerHTML;
     };
     
     let html = markdown;
     
-    // Code blocks (preserve content with strict sanitization)
+    // Code blocks (preserve content)
     const codeBlocks = [];
     html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
         const placeholder = `__CODE_BLOCK_${codeBlocks.length}__`;
@@ -891,7 +889,7 @@ function formatMarkdown(markdown) {
         return placeholder;
     });
     
-    // Inline code (preserve content with strict sanitization)
+    // Inline code (preserve content)
     const inlineCodes = [];
     html = html.replace(/`([^`]+)`/g, (match, code) => {
         const placeholder = `__INLINE_CODE_${inlineCodes.length}__`;
@@ -899,33 +897,26 @@ function formatMarkdown(markdown) {
         return placeholder;
     });
     
-    // Headers (sanitize content)
-    html = html.replace(/^### (.*$)/gim, (match, content) => `<h3>${escapeHtml(content)}</h3>`);
-    html = html.replace(/^## (.*$)/gim, (match, content) => `<h2>${escapeHtml(content)}</h2>`);
-    html = html.replace(/^# (.*$)/gim, (match, content) => `<h1>${escapeHtml(content)}</h1>`);
+    // Headers
+    html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+    html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+    html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
     
-    // Bold (sanitize content)
-    html = html.replace(/\*\*(.*?)\*\*/g, (match, content) => `<strong>${escapeHtml(content)}</strong>`);
+    // Bold
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     
-    // Links (with security attributes and URL validation)
-    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
-        // Validate URL to prevent javascript: and data: URIs
-        const sanitizedUrl = url.trim();
-        if (sanitizedUrl.match(/^(https?:\/\/|\/)/i)) {
-            return `<a href="${escapeHtml(sanitizedUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(text)}</a>`;
-        }
-        return escapeHtml(text); // Invalid URL, just show text
-    });
+    // Links (with security attributes)
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
     
-    // Lists (sanitize content)
-    html = html.replace(/^\- (.*$)/gim, (match, content) => `<li>${escapeHtml(content)}</li>`);
+    // Lists
+    html = html.replace(/^\- (.*$)/gim, '<li>$1</li>');
     html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
-    html = html.replace(/^\d+\. (.*$)/gim, (match, content) => `<li>${escapeHtml(content)}</li>`);
+    html = html.replace(/^\d+\. (.*$)/gim, '<li>$1</li>');
     
-    // Paragraphs (sanitize content)
+    // Paragraphs
     html = html.split('\n\n').map(para => {
         if (!para.match(/^<[h|u|o|p|l]/)) {
-            return '<p>' + escapeHtml(para) + '</p>';
+            return '<p>' + para + '</p>';
         }
         return para;
     }).join('\n');

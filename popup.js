@@ -387,14 +387,9 @@ async function saveSettings(partial) {
  */
 function sanitizeInput(value, maxLength = 500) {
     if (typeof value !== 'string') return '';
-    // Remove HTML tags, script tags, and potentially dangerous characters
-    return value
-        .trim()
-        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-        .replace(/<[^>]+>/g, '')
-        .replace(/[<>'"]/g, '')
-        .replace(/javascript:/gi, '')
-        .replace(/on\w+\s*=/gi, '')
+    // Remove potentially dangerous characters and limit length
+    return value.trim()
+        .replace(/[<>]/g, '')
         .substring(0, maxLength);
 }
 
