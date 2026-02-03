@@ -269,15 +269,16 @@
           <div class="ryco-shortcut">
             <span class="ryco-kbd">↵</span> Insert
             <span class="ryco-kbd">Esc</span> Cancel
+            <span class="ryco-kbd">Ctrl+C</span> Copy
           </div>
           <div class="ryco-actions">
-            <button class="ryco-btn ryco-btn-ghost" data-action="cancel">
+            <button class="ryco-btn ryco-btn-ghost" data-action="cancel" aria-label="Cancel and close">
               ${ICONS.close} Cancel
             </button>
-            <button class="ryco-btn ryco-btn-ghost" data-action="copy">
+            <button class="ryco-btn ryco-btn-ghost" data-action="copy" aria-label="Copy response and close" disabled>
               ${ICONS.copy} Copy
             </button>
-            <button class="ryco-btn ryco-btn-primary" data-action="insert">
+            <button class="ryco-btn ryco-btn-primary" data-action="insert" aria-label="Insert response" disabled>
               ${ICONS.insert} Insert
             </button>
           </div>
@@ -407,95 +408,227 @@
         commandBar._dragCleanup = cleanup;
     }
 
+    /**
+     * Sets up action handlers for command bar buttons with proper cleanup
+     * @param {Object} bar - Command bar object
+     */
     function setupCommandBarActions(bar) {
         const cancelBtn = bar.commandBar.querySelector('[data-action="cancel"]');
         const copyBtn = bar.commandBar.querySelector('[data-action="copy"]');
         const insertBtn = bar.commandBar.querySelector('[data-action="insert"]');
 
-        cancelBtn?.addEventListener('click', () => {
+        // Cancel handler with proper cleanup
+        const handleCancel = (e) => {
+            e?.preventDefault();
+            e?.stopPropagation();
             closeCommandBar();
             showToast('info', 'Cancelled', 'Response discarded');
-        });
+        };
 
-        copyBtn?.addEventListener('click', () => {
-            navigator.clipboard.writeText(bar.response);
-            showToast('success', 'Copied', 'Response copied to clipboard');
-        });
+        // Copy handler with auto-close and validation
+        const handleCopy = async (e) => {
+            e?.preventDefault();
+            e?.stopPropagation();
+            
+            if (!bar.response || typeof bar.response !== 'string') {
+                showToast('warning', 'Nothing to Copy', 'No response available');
+                return;
+            }
 
-        insertBtn?.addEventListener('click', () => {
+            try {
+                await navigator.clipboard.writeText(bar.response);
+                showToast('success', 'Copied!', 'Response copied to clipboard');
+                // Auto-close after successful copy
+                setTimeout(() => {
+                    closeCommandBar();
+                }, 800);
+            } catch (error) {
+                console.error('[Ryco] Copy failed:', error);
+                showToast('error', 'Copy Failed', 'Could not copy to clipboard');
+            }
+        };
+
+        // Insert handler
+        const handleInsert = (e) => {
+            e?.preventDefault();
+            e?.stopPropagation();
             insertResponse();
-        });
+        };
+
+        // Attach event listeners with proper error handling
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', handleCancel, { once: false });
+            bar._cancelHandler = handleCancel;
+        }
+
+        if (copyBtn) {
+            copyBtn.addEventListener('click', handleCopy, { once: false });
+            bar._copyHandler = handleCopy;
+        }
+
+        if (insertBtn) {
+            insertBtn.addEventListener('click', handleInsert, { once: false });
+            bar._insertHandler = handleInsert;
+        }
 
         // Keyboard shortcuts
-        document.addEventListener('keydown', handleKeydown);
+        const keydownHandler = (e) => handleKeydown(e, bar);
+        document.addEventListener('keydown', keydownHandler);
+        bar._keydownHandler = keydownHandler;
     }
 
-    function handleKeydown(e) {
-        if (!activeCommandBar) return;
+    /**
+     * Handles keyboard shortcuts for command bar with proper event handling
+     * @param {KeyboardEvent} e - Keyboard event
+     * @param {Object} bar - Command bar object (optional, uses activeCommandBar if not provided)
+     */
+    function handleKeydown(e, bar = null) {
+        const currentBar = bar || activeCommandBar;
+        if (!currentBar) return;
 
+        // Escape key - Cancel
         if (e.key === 'Escape') {
             e.preventDefault();
+            e.stopPropagation();
             closeCommandBar();
-        } else if (e.key === 'Enter' && !e.shiftKey) {
-            if (activeCommandBar.response) {
+            showToast('info', 'Cancelled', 'Response discarded');
+        } 
+        // Enter key - Insert (only if response is available)
+        else if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+            if (currentBar.response && typeof currentBar.response === 'string' && currentBar.response.length > 0) {
                 e.preventDefault();
+                e.stopPropagation();
                 insertResponse();
+            }
+        }
+        // Ctrl+C or Cmd+C - Copy (when command bar is focused)
+        else if ((e.ctrlKey || e.metaKey) && e.key === 'c' && e.target.closest('.ryco-command-bar')) {
+            if (currentBar.response && typeof currentBar.response === 'string' && currentBar.response.length > 0) {
+                e.preventDefault();
+                e.stopPropagation();
+                navigator.clipboard.writeText(currentBar.response).then(() => {
+                    showToast('success', 'Copied!', 'Response copied to clipboard');
+                    setTimeout(() => closeCommandBar(), 800);
+                }).catch(error => {
+                    console.error('[Ryco] Copy failed:', error);
+                    showToast('error', 'Copy Failed', 'Could not copy to clipboard');
+                });
             }
         }
     }
 
     /**
-     * Inserts AI response into the active element with validation
+     * Inserts AI response into the active element with comprehensive validation
      */
     function insertResponse() {
         if (!activeCommandBar || !activeElement || !triggerMatch) {
             console.warn('[Ryco] Cannot insert: missing required data');
+            showToast('warning', 'Insert Failed', 'No active element or response');
             return;
         }
 
         try {
-            const currentValue = getElementValue(activeElement);
-            
-            // Validate response before inserting
+            // Validate response
             if (!activeCommandBar.response || typeof activeCommandBar.response !== 'string') {
                 throw new Error('Invalid response data');
             }
-            
+
+            if (activeCommandBar.response.length === 0) {
+                throw new Error('Empty response');
+            }
+
+            const currentValue = getElementValue(activeElement);
+
+            // Validate current value
+            if (typeof currentValue !== 'string') {
+                throw new Error('Invalid element value');
+            }
+
             // Ensure indices are valid
             if (triggerMatch.start < 0 || triggerMatch.end > currentValue.length) {
                 throw new Error('Invalid trigger match indices');
             }
-            
+
+            // Construct new value
             const newValue = currentValue.substring(0, triggerMatch.start) +
                 activeCommandBar.response +
                 currentValue.substring(triggerMatch.end);
 
+            // Validate new value length (prevent excessive content)
+            if (newValue.length > MAX_PROMPT_LENGTH * 2) {
+                throw new Error('Result too large');
+            }
+
+            // Set the new value
             setElementValue(activeElement, newValue);
+
+            // Close command bar
             closeCommandBar();
 
-            showToast('success', 'Inserted', 'Response inserted successfully');
+            // Show success toast
+            showToast('success', 'Inserted!', 'Response inserted successfully');
+
         } catch (error) {
             console.error('[Ryco] Insert error:', error);
-            showToast('error', 'Error', 'Failed to insert response');
+            showToast('error', 'Insert Failed', error.message || 'Failed to insert response');
         }
     }
 
+    /**
+     * Closes command bar with proper cleanup of all event listeners
+     */
     function closeCommandBar() {
-        if (activeCommandBar) {
+        if (!activeCommandBar) return;
+
+        try {
+            // Add closing animation
             activeCommandBar.commandBar.classList.add('closing');
-            
+
+            // Cleanup all event listeners
+            if (activeCommandBar._keydownHandler) {
+                document.removeEventListener('keydown', activeCommandBar._keydownHandler);
+                activeCommandBar._keydownHandler = null;
+            }
+
             // Cleanup drag listeners
             if (activeCommandBar.commandBar._dragCleanup) {
                 activeCommandBar.commandBar._dragCleanup();
+                activeCommandBar.commandBar._dragCleanup = null;
             }
-            
+
+            // Cleanup button handlers
+            const cancelBtn = activeCommandBar.commandBar.querySelector('[data-action="cancel"]');
+            const copyBtn = activeCommandBar.commandBar.querySelector('[data-action="copy"]');
+            const insertBtn = activeCommandBar.commandBar.querySelector('[data-action="insert"]');
+
+            if (cancelBtn && activeCommandBar._cancelHandler) {
+                cancelBtn.removeEventListener('click', activeCommandBar._cancelHandler);
+            }
+            if (copyBtn && activeCommandBar._copyHandler) {
+                copyBtn.removeEventListener('click', activeCommandBar._copyHandler);
+            }
+            if (insertBtn && activeCommandBar._insertHandler) {
+                insertBtn.removeEventListener('click', activeCommandBar._insertHandler);
+            }
+
+            // Remove DOM element after animation
             setTimeout(() => {
-                activeCommandBar.host.remove();
+                if (activeCommandBar && activeCommandBar.host) {
+                    activeCommandBar.host.remove();
+                }
                 activeCommandBar = null;
             }, 200);
+
+        } catch (error) {
+            console.error('[Ryco] Error closing command bar:', error);
+            // Force cleanup even if error occurs
+            if (activeCommandBar && activeCommandBar.host) {
+                activeCommandBar.host.remove();
+            }
+            activeCommandBar = null;
         }
 
-        document.removeEventListener('keydown', handleKeydown);
+        // Reset state
         activeElement = null;
         triggerMatch = null;
         currentRequestId = null;
@@ -539,7 +672,7 @@
     });
 
     /**
-     * Handles streaming response chunks with error handling
+     * Handles streaming response chunks with error handling and button state management
      * @param {Object} message - Message containing chunk data
      */
     function handleStreamChunk(message) {
@@ -553,6 +686,12 @@
                 activeCommandBar.loadingSkeleton.remove();
                 activeCommandBar.loadingSkeleton = null;
                 activeCommandBar.responseArea.innerHTML = '';
+                
+                // Enable buttons when first chunk arrives
+                const copyBtn = activeCommandBar.commandBar.querySelector('[data-action="copy"]');
+                const insertBtn = activeCommandBar.commandBar.querySelector('[data-action="insert"]');
+                if (copyBtn) copyBtn.disabled = false;
+                if (insertBtn) insertBtn.disabled = false;
             }
 
             if (message.chunk && typeof message.chunk === 'string') {
@@ -572,6 +711,12 @@
                 // Remove cursor when done
                 const cursor = activeCommandBar.responseArea.querySelector('.ryco-cursor');
                 cursor?.remove();
+                
+                // Ensure buttons are enabled
+                const copyBtn = activeCommandBar.commandBar.querySelector('[data-action="copy"]');
+                const insertBtn = activeCommandBar.commandBar.querySelector('[data-action="insert"]');
+                if (copyBtn) copyBtn.disabled = false;
+                if (insertBtn) insertBtn.disabled = false;
             }
         } catch (error) {
             console.error('[Ryco] Stream chunk error:', error);
