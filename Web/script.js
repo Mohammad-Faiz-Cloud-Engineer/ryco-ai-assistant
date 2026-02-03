@@ -573,6 +573,38 @@ Thank you for contributing to Ryco!`,
 
 All notable changes to Ryco will be documented in this file.
 
+## [1.7.0] - 2026-02-04
+
+### 🎯 Copy Button & Reliability Update!
+
+Ryco v1.7.0 brings the most requested feature plus rock-solid reliability improvements!
+
+### What's New
+- **Copy Button with Auto-Close** - Click copy, window closes automatically after 800ms
+- **Keyboard Shortcuts Enhanced** - Ctrl+C to copy, Esc to cancel, Enter to insert
+- **Smart Button States** - Copy and Insert buttons disabled until response is ready
+- **100% Reliable Cancel** - Fixed all cancel button issues with proper cleanup
+
+### User Experience
+- Auto-close after copying (no manual closing needed)
+- Visual feedback on all button hovers
+- Accessibility labels for screen readers
+- Better error messages when things go wrong
+
+### Under the Hood
+- Fixed memory leaks in event listeners
+- Comprehensive error handling everywhere
+- Production-grade code quality
+- Enhanced security with input validation
+- Optimized performance with RAF for dragging
+
+### Security & Performance
+- XSS prevention with HTML escaping
+- 5000 character input limit enforced
+- Debounced input handling (100ms)
+- Proper cleanup of all resources
+- Type checking on all inputs
+
 ## [1.6.0] - 2026-02-01
 
 ### 🛡️ Rock-Solid Quality Update!
