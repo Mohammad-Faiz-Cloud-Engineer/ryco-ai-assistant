@@ -269,9 +269,24 @@
     color: var(--ryco-text-primary);
 }
 
+.ryco-btn-ghost[data-action="copy"]:hover {
+    background: var(--ryco-success-subtle);
+    color: var(--ryco-success);
+}
+
 .ryco-btn-ghost[data-action="cancel"]:hover {
     background: var(--ryco-error-subtle);
     color: var(--ryco-error);
+}
+
+.ryco-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.ryco-btn:active:not(:disabled) {
+    transform: scale(0.98);
 }
 
 .ryco-shortcut {
