@@ -7,7 +7,7 @@
 /**
  * Performance configuration for extreme unpredictability and human-like output
  * 
- * TEMPERATURE: 1.2 - Above normal maximum for creative, varied responses
+ * TEMPERATURE: 1.1 - Above normal maximum for creative, varied responses
  * TOP_K: 40 - Capped for Gemini compatibility (max supported across all models)
  * TOP_P: 0.85 - Lower for more diverse, unexpected token choices
  * FREQUENCY_PENALTY: 0.7 - Strong anti-repetition
@@ -17,12 +17,17 @@
  * contractions, and avoiding AI patterns, this creates a "stream of consciousness"
  * feel that's distinctly human-like, especially on Gemini 3 Deep-Think models.
  * 
- * CAUTION: High temperature (1.2) may occasionally produce unexpected outputs.
- * This is intentional for the "Ryco" personality but can be lowered to 0.7-0.9
- * for more predictable, professional responses.
+ * TEMPERATURE TUNING GUIDE:
+ * - 1.1: Perfect for DeepSeek R1, Llama 3.1 405B, Gemini Deep-Think (creative personality)
+ * - 1.0: Balanced for most models (recommended if you see repetition)
+ * - 0.9: Safe fallback for GPT-4o-mini (prevents "looping" or weird characters)
+ * 
+ * TROUBLESHOOTING: If the AI gets "drunk", repeats itself, or outputs strange characters,
+ * lower TEMPERATURE to 1.0 or 0.9. This is especially common with smaller models like
+ * GPT-4o-mini when temperature is too high.
  */
 const PERFORMANCE_CONFIG = {
-  TEMPERATURE: 1.2,  // Above normal maximum for extreme unpredictability
+  TEMPERATURE: 1.1,  // Above normal maximum for extreme unpredictability
   MAX_TOKENS: 8192,
   TOP_P: 0.85,  // Lower for more diverse, unexpected choices
   TOP_K: 40,  // Capped at 40 for Gemini compatibility (max supported)
@@ -128,9 +133,9 @@ const PROVIDERS = {
     // NVIDIA-specific tuning: Llama models benefit from slightly lower temperature
     performance: {
       temperature: 1.0,  // Balanced for Llama's casual style
-      topP: 0.85,
-      frequencyPenalty: 0.7,
-      presencePenalty: 0.6
+      top_p: 0.85,
+      frequency_penalty: 0.7,
+      presence_penalty: 0.6
     }
   },
  gemini: {
@@ -146,31 +151,28 @@ const PROVIDERS = {
     supportsStreaming: true,
     // Gemini-specific tuning: Higher temperature for deep-think reasoning
     performance: {
-      temperature: 1.2,  // Enables lateral thinking on deep-think models
-      topP: 0.85,
-      topK: 40,
-      frequencyPenalty: 0.7,
-      presencePenalty: 0.6
+      temperature: 1.1,  // Enables lateral thinking on deep-think models
+      top_p: 0.85,
+      top_k: 40,
+      frequency_penalty: 0.7,
+      presence_penalty: 0.6
     }
   },
   openai: {
     name: 'OpenAI',
-    endpoint: 'https://api.openai.com/v1/responses',  // 2026 Responses API (GPT-4.5/5+)
-    // NOTE: If using 2024-era API keys or non-migrated models, switch to:
-    // endpoint: 'https://api.openai.com/v1/chat/completions'
-    // and adjust body format in sendChatRequest (use 'messages' not 'input')
+    endpoint: 'https://api.openai.com/v1/chat/completions',  // Standard stable endpoint
     defaultModel: 'gpt-4.1',
     models: [
-      'gpt-4.1',        // Native Responses API support
-      'gpt-4.1-mini',   // Native Responses API support
-      'gpt-4o',         // Migrated to Responses API
-      'gpt-4o-mini'     // Migrated to Responses API
+      'gpt-4.1',        // Latest model
+      'gpt-4.1-mini',   // Efficient variant
+      'gpt-4o',         // Previous generation
+      'gpt-4o-mini'     // Previous generation mini
     ],
     supportsStreaming: true,
     // OpenAI-specific tuning: Moderate temperature for professional tone
     performance: {
       temperature: 0.9,  // Balanced creativity without chaos
-      topP: 0.85
+      top_p: 0.85
     }
   }
 };
@@ -282,7 +284,7 @@ async function getActiveModel() {
   }
 }
 
-// ========== User Context Builder ==========
+// ========== Retry Utilities ==========
 /**
  * Retries a fetch request with exponential backoff for rate limit errors
  * @param {Function} fetchFn - Async function that returns a fetch promise
@@ -461,31 +463,17 @@ async function sendChatRequest(prompt, streamCallback) {
     content: prompt
   });
   
-  let body;
-  
-  if (settings.activeProvider === 'openai') {
-    // OpenAI Responses API format
-    body = {
-      model: model,
-      input: messages,
-      stream: true,
-      temperature: provider.performance?.temperature || PERFORMANCE_CONFIG.TEMPERATURE,
-      max_output_tokens: PERFORMANCE_CONFIG.MAX_TOKENS,
-      top_p: provider.performance?.topP || PERFORMANCE_CONFIG.TOP_P
-    };
-  } else {
-    // NVIDIA still uses chat completions format
-    body = {
-      model: model,
-      messages: messages,
-      stream: true,
-      temperature: provider.performance?.temperature || PERFORMANCE_CONFIG.TEMPERATURE,
-      max_tokens: PERFORMANCE_CONFIG.MAX_TOKENS,
-      top_p: provider.performance?.topP || PERFORMANCE_CONFIG.TOP_P,
-      frequency_penalty: provider.performance?.frequencyPenalty || PERFORMANCE_CONFIG.FREQUENCY_PENALTY,
-      presence_penalty: provider.performance?.presencePenalty || PERFORMANCE_CONFIG.PRESENCE_PENALTY
-    };
-  }
+  // Standard OpenAI-compatible format for both NVIDIA and OpenAI
+  const body = {
+    model: model,
+    messages: messages,
+    stream: true,
+    temperature: provider.performance?.temperature || PERFORMANCE_CONFIG.TEMPERATURE,
+    max_tokens: PERFORMANCE_CONFIG.MAX_TOKENS,
+    top_p: provider.performance?.top_p || PERFORMANCE_CONFIG.TOP_P,
+    frequency_penalty: provider.performance?.frequency_penalty || PERFORMANCE_CONFIG.FREQUENCY_PENALTY,
+    presence_penalty: provider.performance?.presence_penalty || PERFORMANCE_CONFIG.PRESENCE_PENALTY
+  };
   
   try {
     const response = await fetchWithRetry(() => 
@@ -502,49 +490,13 @@ async function sendChatRequest(prompt, streamCallback) {
     console.log(`[${settings.activeProvider.toUpperCase()}] Response received in:`, responseTime.toFixed(2), 'ms');
     console.log(`[${settings.activeProvider.toUpperCase()}] Response status:`, response.status);
     
-    // OpenAI Responses API fallback: If 404, try legacy chat/completions endpoint
-    if (!response.ok && response.status === 404 && settings.activeProvider === 'openai') {
-      console.warn('[OpenAI] Responses API returned 404, falling back to chat/completions endpoint');
-      
-      // Retry with legacy endpoint
-      const legacyEndpoint = 'https://api.openai.com/v1/chat/completions';
-      const legacyBody = {
-        model: model,
-        messages: messages,
-        stream: true,
-        temperature: provider.performance?.temperature || PERFORMANCE_CONFIG.TEMPERATURE,
-        max_tokens: PERFORMANCE_CONFIG.MAX_TOKENS,
-        top_p: provider.performance?.topP || PERFORMANCE_CONFIG.TOP_P
-      };
-      
-      const legacyResponse = await fetchWithRetry(() =>
-        fetch(legacyEndpoint, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(legacyBody),
-          keepalive: true
-        })
-      );
-      
-      if (!legacyResponse.ok) {
-        const errorData = await legacyResponse.json().catch(() => ({}));
-        console.error('[OpenAI] Legacy endpoint also failed:', errorData);
-        throw new Error(errorData.error?.message || `API Error: ${legacyResponse.status}`);
-      }
-      
-      console.log('[OpenAI] Successfully connected via legacy chat/completions endpoint');
-      return await handleOpenAIStream(legacyResponse, startTime, settings.activeProvider, false); // false = legacy format
-    }
-    
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error(`[${settings.activeProvider.toUpperCase()}] Error response:`, errorData);
       throw new Error(errorData.error?.message || `API Error: ${response.status}`);
     }
     
-    // Determine if using Responses API format
-    const isResponsesAPI = settings.activeProvider === 'openai' && provider.endpoint.includes('/responses');
-    return await handleOpenAIStream(response, startTime, settings.activeProvider, isResponsesAPI);
+    return await handleOpenAIStream(response, startTime, settings.activeProvider, streamCallback);
     
   } catch (error) {
     console.error(`[${settings.activeProvider.toUpperCase()}] Request error:`, error);
@@ -557,10 +509,10 @@ async function sendChatRequest(prompt, streamCallback) {
  * @param {Response} response - Fetch response object
  * @param {number} startTime - Request start time
  * @param {string} provider - Provider name
- * @param {boolean} isResponsesAPI - Whether using Responses API format
+ * @param {Function} streamCallback - Callback for streaming chunks
  * @returns {Promise<string>} Full response text
  */
-async function handleOpenAIStream(response, startTime, provider, isResponsesAPI) {
+async function handleOpenAIStream(response, startTime, provider, streamCallback) {
     // Handle SSE streaming
     const reader = response.body.getReader();
     const decoder = new TextDecoder('utf-8', { fatal: false });
@@ -605,17 +557,9 @@ async function handleOpenAIStream(response, startTime, provider, isResponsesAPI)
             
             try {
               const parsed = JSON.parse(data);
-              let content = null;
               
-              if (isResponsesAPI) {
-                // OpenAI Responses API format
-                if (parsed.type === 'response.output_text.delta') {
-                  content = parsed.delta;
-                }
-              } else {
-                // Legacy chat completions format (NVIDIA and OpenAI fallback)
-                content = parsed.choices?.[0]?.delta?.content;
-              }
+              // FIX: Standard OpenAI format - choices[0].delta.content
+              const content = parsed.choices?.[0]?.delta?.content;
               
               if (content) {
                 chunkCount++;
@@ -631,10 +575,10 @@ async function handleOpenAIStream(response, startTime, provider, isResponsesAPI)
     } finally {
       reader.releaseLock();
       clearInterval(keepAliveInterval); // Stop heartbeat
+      streamCallback('', true); // Signal completion
     }
     
     console.log(`[${provider.toUpperCase()}] Full response length:`, fullResponse.length, 'characters');
-    streamCallback('', true);
     return fullResponse;
 }
 
@@ -676,12 +620,13 @@ FORMAT: Plain text only. No markdown. No asterisks. No code fences. No brackets.
     ],
     generationConfig: {
       temperature: providerConfig.performance?.temperature || PERFORMANCE_CONFIG.TEMPERATURE,
-      topK: providerConfig.performance?.topK || PERFORMANCE_CONFIG.TOP_K,
-      topP: providerConfig.performance?.topP || PERFORMANCE_CONFIG.TOP_P,
+      topK: providerConfig.performance?.top_k || PERFORMANCE_CONFIG.TOP_K,
+      topP: providerConfig.performance?.top_p || PERFORMANCE_CONFIG.TOP_P,
       candidateCount: 1,  // Strictly enforce single candidate to prevent extra token costs
       maxOutputTokens: PERFORMANCE_CONFIG.MAX_TOKENS,
-      presencePenalty: providerConfig.performance?.presencePenalty || PERFORMANCE_CONFIG.PRESENCE_PENALTY,
-      frequencyPenalty: providerConfig.performance?.frequencyPenalty || PERFORMANCE_CONFIG.FREQUENCY_PENALTY
+      // FIX: Use snake_case for Google API
+      presence_penalty: providerConfig.performance?.presence_penalty || PERFORMANCE_CONFIG.PRESENCE_PENALTY,
+      frequency_penalty: providerConfig.performance?.frequency_penalty || PERFORMANCE_CONFIG.FREQUENCY_PENALTY
     },
     safetySettings: [
       {
@@ -791,18 +736,8 @@ FORMAT: Plain text only. No markdown. No asterisks. No code fences. No brackets.
                 streamCallback(content, false);
               }
             } catch (e) {
-              // Handle fragmented JSON (common in 2026 SSE streams)
-              // Prepend failed fragment to buffer for next iteration
-              const fragmentedData = sanitizedLine.slice(6).trim();
-              
-              // Safety check: prevent infinite loop from malformed/massive fragments
-              if (fragmentedData && fragmentedData.length > 0 && buffer.length < 5000) {
-                buffer = 'data: ' + fragmentedData + '\n' + buffer;
-                console.warn('[Gemini] Fragmented JSON detected, buffering for next chunk');
-              } else if (buffer.length >= 5000) {
-                console.error('[Gemini] Buffer overflow detected, clearing to prevent infinite loop');
-                buffer = '';
-              }
+              // Skip malformed JSON - let buffer naturally accumulate
+              console.warn('[Gemini] JSON parse error, skipping fragment');
             }
           }
         }
@@ -833,10 +768,10 @@ FORMAT: Plain text only. No markdown. No asterisks. No code fences. No brackets.
     } finally {
       reader.releaseLock();
       clearInterval(keepAliveInterval); // Stop heartbeat
+      streamCallback('', true); // Signal completion
     }
     
     console.log('[Gemini] Full response length:', fullResponse.length, 'characters');
-    streamCallback('', true);
     return fullResponse;
     
   } catch (error) {
@@ -992,8 +927,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 chunk,
                 isDone,
                 requestId: message.requestId
-              }).catch(err => {
-                console.error('[Ryco] Failed to send chunk:', err);
+              }).catch(() => {
+                // Silently ignore errors if tab is closed during streaming
               });
             }
           );
