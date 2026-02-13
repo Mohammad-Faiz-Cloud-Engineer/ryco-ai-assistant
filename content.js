@@ -83,22 +83,18 @@
     }
 
     async function injectStyles(shadow) {
-        const tokensUrl = chrome.runtime.getURL('styles/tokens.css');
-        const injectUrl = chrome.runtime.getURL('styles/inject.css');
+        // CSP-safe approach: Use <link> tags instead of fetch()
+        // This bypasses Content Security Policy restrictions on high-security sites
+        const link1 = document.createElement('link');
+        link1.rel = 'stylesheet';
+        link1.href = chrome.runtime.getURL('styles/tokens.css');
 
-        const [tokensRes, injectRes] = await Promise.all([
-            fetch(tokensUrl),
-            fetch(injectUrl)
-        ]);
+        const link2 = document.createElement('link');
+        link2.rel = 'stylesheet';
+        link2.href = chrome.runtime.getURL('styles/inject.css');
 
-        const [tokensCSS, injectCSS] = await Promise.all([
-            tokensRes.text(),
-            injectRes.text()
-        ]);
-
-        const style = document.createElement('style');
-        style.textContent = tokensCSS + '\n' + injectCSS;
-        shadow.appendChild(style);
+        shadow.appendChild(link1);
+        shadow.appendChild(link2);
     }
 
     // ========== Icons ==========
@@ -115,30 +111,31 @@
 
     // ========== Toast Notification System ==========
     function initToastContainer() {
-        if (toastContainer) return;
+        if (toastContainer) return Promise.resolve();
 
         const { host, shadow } = createShadowHost();
         host.style.cssText = 'all: initial;';
 
-        injectStyles(shadow).then(() => {
-            const wrapper = document.createElement('div');
-            wrapper.setAttribute('data-theme', currentTheme);
+        injectStyles(shadow);
+        
+        const wrapper = document.createElement('div');
+        wrapper.setAttribute('data-theme', currentTheme);
 
-            const container = document.createElement('div');
-            container.className = 'ryco-toast-container';
+        const container = document.createElement('div');
+        container.className = 'ryco-toast-container';
 
-            wrapper.appendChild(container);
-            shadow.appendChild(wrapper);
+        wrapper.appendChild(container);
+        shadow.appendChild(wrapper);
 
-            toastContainer = { host, shadow, container, wrapper };
-        });
+        toastContainer = { host, shadow, container, wrapper };
+        
+        // Return resolved promise for consistent async handling
+        return Promise.resolve();
     }
 
-    function showToast(type, title, message, duration = 4000) {
+    async function showToast(type, title, message, duration = 4000) {
         if (!toastContainer) {
-            initToastContainer();
-            setTimeout(() => showToast(type, title, message, duration), 100);
-            return;
+            await initToastContainer();
         }
 
         const toast = document.createElement('div');
@@ -177,7 +174,7 @@
 
         const { host, shadow } = createShadowHost();
 
-        await injectStyles(shadow);
+        injectStyles(shadow);
 
         // Get settings for provider info
         let providerName = 'AI';
