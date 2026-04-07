@@ -78,7 +78,6 @@ async function decryptApiKey(encrypted) {
     );
     return new TextDecoder().decode(decrypted);
   } catch (e) {
-    console.error('Decryption failed:', e);
     return null;
   }
 }
@@ -189,7 +188,6 @@ async function getSettings() {
         : {}
     };
   } catch (error) {
-    console.error('[Ryco] Failed to get settings:', error);
     // Return safe defaults
     return {
       activeProvider: 'openai',
@@ -212,7 +210,6 @@ async function getActiveApiKey() {
     if (!encryptedKey) return null;
     return await decryptApiKey(encryptedKey);
   } catch (error) {
-    console.error('[Ryco] Failed to get active API key:', error);
     return null;
   }
 }
@@ -237,7 +234,6 @@ async function saveApiKey(provider, key) {
     settings.apiKeys[provider] = encrypted;
     await chrome.storage.local.set({ apiKeys: settings.apiKeys });
   } catch (error) {
-    console.error('[Ryco] Failed to save API key:', error);
     throw error;
   }
 }
@@ -251,12 +247,10 @@ async function getActiveModel() {
     const settings = await getSettings();
     const provider = PROVIDERS[settings.activeProvider];
     if (!provider) {
-      console.warn('[Ryco] Invalid provider, using default');
       return PROVIDERS.openai.defaultModel;
     }
     return settings.selectedModels[settings.activeProvider] || provider.defaultModel;
   } catch (error) {
-    console.error('[Ryco] Failed to get active model:', error);
     return PROVIDERS.openai.defaultModel;
   }
 }
@@ -346,51 +340,37 @@ async function sendChatRequest(prompt, streamCallback) {
   }
   
   // OpenAI-compatible format for NVIDIA and OpenAI
-  console.log(`[${settings.activeProvider.toUpperCase()}] Sending request to:`, model);
-  const startTime = performance.now();
   
   const headers = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${apiKey}`
   };
   
+  // Consolidated system prompt - LLMs follow single prompts better than fragmented ones
+  let systemPrompt = `You are Ryco by Mohammad Faiz. Write like a real human typing quickly - casual, helpful, natural.
+
+WRITING STYLE: Mix short and long sentences. Use tons of contractions (don't, can't, won't, I'm, you're, it's, could've, should've). Start sentences with And, But, So, Well, Look, Honestly, Actually. Add filler words constantly (just, really, actually, basically, honestly, literally, kind of, sort of, you know, I mean, like). Use casual slang (gonna, wanna, gotta, kinda, sorta, yeah, nah).
+
+HUMAN PATTERNS: Add personal touches (I think, I feel, in my experience, personally, to me, IMO). Use hesitation markers (well, um, hmm, hang on, let me think). Add self-corrections (I mean, well actually, or rather). Use hedging language (maybe, perhaps, probably, I guess, I suppose). Add intensifiers (really, very, super, totally, absolutely). Use informal transitions (anyway, so yeah, moving on, oh and, btw, plus).
+
+PUNCTUATION RULES: Use commas (,) and periods (.) for almost everything - that's what humans do. RARELY use dashes - only when absolutely necessary for a quick aside. When you do need a dash, ONLY use regular keyboard hyphen (-), NEVER em dash (—) or en dash (–). NEVER use semicolons (;). NEVER use colons (:) except in greetings. Use ellipses (...) occasionally for pauses. Add occasional caps for EMPHASIS. Use apostrophes (') for contractions. Keep it simple - commas and periods are your main tools.
+
+BANNED AI PATTERNS: NEVER use "Furthermore", "Moreover", "Additionally", "In conclusion", "It is important to note", "Please note". NEVER use numbered lists unless asked. NEVER use bullet points. NEVER use perfect parallel structure. NEVER use formal academic language. NEVER use corporate jargon. NEVER be overly polite.
+
+GRAMMAR & STRUCTURE: Break grammar rules naturally. Use sentence fragments. Use run-on sentences. Start with And/But/So. Be slightly repetitive. Add tangents. Use vague words (stuff, things, whatever). Make it feel spontaneous and unplanned. Vary sentence rhythm wildly.
+
+FORMAT: Plain text only. No markdown. No asterisks. No code fences. No brackets. No symbols. For code, paste directly. For emails, be casual but professional - not like a template. Write like you're typing fast without overthinking.`;
+  
+  if (userContext) {
+    systemPrompt += `\n\n${userContext}`;
+  }
+  
   const messages = [
     {
       role: 'system',
-      content: 'You are Ryco by Mohammad Faiz. Write like a real human typing quickly - casual, helpful, natural.'
-    },
-    {
-      role: 'system',
-      content: 'WRITING STYLE: Mix short and long sentences. Use tons of contractions (don\'t, can\'t, won\'t, I\'m, you\'re, it\'s, could\'ve, should\'ve). Start sentences with And, But, So, Well, Look, Honestly, Actually. Add filler words constantly (just, really, actually, basically, honestly, literally, kind of, sort of, you know, I mean, like). Use casual slang (gonna, wanna, gotta, kinda, sorta, yeah, nah).'
-    },
-    {
-      role: 'system',
-      content: 'HUMAN PATTERNS: Add personal touches (I think, I feel, in my experience, personally, to me, IMO). Use hesitation markers (well, um, hmm, hang on, let me think). Add self-corrections (I mean, well actually, or rather). Use hedging language (maybe, perhaps, probably, I guess, I suppose). Add intensifiers (really, very, super, totally, absolutely). Use informal transitions (anyway, so yeah, moving on, oh and, btw, plus).'
-    },
-    {
-      role: 'system',
-      content: 'PUNCTUATION RULES: Use commas (,) and periods (.) for almost everything - that\'s what humans do. RARELY use dashes - only when absolutely necessary for a quick aside. When you do need a dash, ONLY use regular keyboard hyphen (-), NEVER em dash (—) or en dash (–). NEVER use semicolons (;). NEVER use colons (:) except in greetings. Use ellipses (...) occasionally for pauses. Add occasional caps for EMPHASIS. Use apostrophes (\') for contractions. Keep it simple - commas and periods are your main tools.'
-    },
-    {
-      role: 'system',
-      content: 'BANNED AI PATTERNS: NEVER use "Furthermore", "Moreover", "Additionally", "In conclusion", "It is important to note", "Please note". NEVER use numbered lists unless asked. NEVER use bullet points. NEVER use perfect parallel structure. NEVER use formal academic language. NEVER use corporate jargon. NEVER be overly polite.'
-    },
-    {
-      role: 'system',
-      content: 'GRAMMAR & STRUCTURE: Break grammar rules naturally. Use sentence fragments. Use run-on sentences. Start with And/But/So. Be slightly repetitive. Add tangents. Use vague words (stuff, things, whatever). Make it feel spontaneous and unplanned. Vary sentence rhythm wildly.'
-    },
-    {
-      role: 'system',
-      content: 'FORMAT: Plain text only. No markdown. No asterisks. No code fences. No brackets. No symbols. For code, paste directly. For emails, be casual but professional - not like a template. Write like you\'re typing fast without overthinking.'
+      content: systemPrompt
     }
   ];
-  
-  if (userContext) {
-    messages.push({
-      role: 'system',
-      content: userContext
-    });
-  }
   
   messages.push({
     role: 'user',
@@ -429,13 +409,8 @@ async function sendChatRequest(prompt, streamCallback) {
     
     const response = await Promise.race([fetchPromise, timeoutPromise]);
     
-    const responseTime = performance.now() - startTime;
-    console.log(`[${settings.activeProvider.toUpperCase()}] Response received in:`, responseTime.toFixed(2), 'ms');
-    console.log(`[${settings.activeProvider.toUpperCase()}] Response status:`, response.status);
-    
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error(`[${settings.activeProvider.toUpperCase()}] Error response:`, errorData);
       const errorMsg = sanitizeErrorMessage(errorData.error?.message || `API Error: ${response.status}`);
       throw new Error(errorMsg);
     }
@@ -446,14 +421,12 @@ async function sendChatRequest(prompt, streamCallback) {
     let fullResponse = '';
     let buffer = '';
     let chunkCount = 0;
-    let firstChunkTime = null;
     let streamAborted = false;
     let lastChunkTime = Date.now();
     
     // Set up chunk timeout
     const chunkTimeoutCheck = setInterval(() => {
       if (Date.now() - lastChunkTime > STREAM_CHUNK_TIMEOUT) {
-        console.error(`[${settings.activeProvider.toUpperCase()}] Stream timeout - no chunks received`);
         streamAborted = true;
         clearInterval(chunkTimeoutCheck);
         reader.cancel().catch(() => {});
@@ -467,12 +440,6 @@ async function sendChatRequest(prompt, streamCallback) {
         
         if (done) {
           clearInterval(chunkTimeoutCheck);
-          const totalTime = performance.now() - startTime;
-          console.log(`[${settings.activeProvider.toUpperCase()}] Stream complete. Total chunks:`, chunkCount);
-          console.log(`[${settings.activeProvider.toUpperCase()}] Total time:`, totalTime.toFixed(2), 'ms');
-          if (chunkCount > 0) {
-            console.log(`[${settings.activeProvider.toUpperCase()}] Average chunk time:`, (totalTime / chunkCount).toFixed(2), 'ms');
-          }
           break;
         }
         
@@ -481,11 +448,6 @@ async function sendChatRequest(prompt, streamCallback) {
         }
         
         lastChunkTime = Date.now();
-        
-        if (!firstChunkTime) {
-          firstChunkTime = performance.now() - startTime;
-          console.log(`[${settings.activeProvider.toUpperCase()}] First chunk received in:`, firstChunkTime.toFixed(2), 'ms');
-        }
         
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
@@ -506,7 +468,6 @@ async function sendChatRequest(prompt, streamCallback) {
                 
                 // Check for buffer overflow attack
                 if (fullResponse.length > MAX_RESPONSE_LENGTH) {
-                  console.error(`[${settings.activeProvider.toUpperCase()}] Response exceeded maximum length`);
                   streamAborted = true;
                   throw new Error('Response too large');
                 }
@@ -526,7 +487,7 @@ async function sendChatRequest(prompt, streamCallback) {
       try {
         await reader.cancel();
       } catch (cancelError) {
-        console.error(`[${settings.activeProvider.toUpperCase()}] Error canceling reader:`, cancelError);
+        // Reader already released
       }
       throw error;
     } finally {
@@ -542,13 +503,11 @@ async function sendChatRequest(prompt, streamCallback) {
       // Already released
     }
     
-    console.log(`[${settings.activeProvider.toUpperCase()}] Full response length:`, fullResponse.length, 'characters');
     streamCallback('', true);
     return fullResponse;
     
   } catch (error) {
     if (timeoutId) clearTimeout(timeoutId);
-    console.error(`[${settings.activeProvider.toUpperCase()}] Request error:`, error);
     throw error;
   }
 }
@@ -611,9 +570,6 @@ FORMAT: Plain text only. No markdown. No asterisks. No code fences. No brackets.
     ]
   };
   
-  console.log('[Gemini] Sending request to:', model);
-  const startTime = performance.now();
-  
   let timeoutId = null;
   let abortController = new AbortController();
   
@@ -637,13 +593,8 @@ FORMAT: Plain text only. No markdown. No asterisks. No code fences. No brackets.
     
     const response = await Promise.race([fetchPromise, timeoutPromise]);
     
-    const responseTime = performance.now() - startTime;
-    console.log('[Gemini] Response received in:', responseTime.toFixed(2), 'ms');
-    console.log('[Gemini] Response status:', response.status);
-    
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('[Gemini] Error response:', errorData);
       const errorMsg = sanitizeErrorMessage(errorData.error?.message || `API Error: ${response.status}`);
       throw new Error(errorMsg);
     }
@@ -660,7 +611,6 @@ FORMAT: Plain text only. No markdown. No asterisks. No code fences. No brackets.
     // Set up chunk timeout
     const chunkTimeoutCheck = setInterval(() => {
       if (Date.now() - lastChunkTime > STREAM_CHUNK_TIMEOUT) {
-        console.error('[Gemini] Stream timeout - no chunks received');
         streamAborted = true;
         clearInterval(chunkTimeoutCheck);
         reader.cancel().catch(() => {});
@@ -673,12 +623,6 @@ FORMAT: Plain text only. No markdown. No asterisks. No code fences. No brackets.
         
         if (done) {
           clearInterval(chunkTimeoutCheck);
-          const totalTime = performance.now() - startTime;
-          console.log('[Gemini] Stream complete. Total chunks:', chunkCount);
-          console.log('[Gemini] Total time:', totalTime.toFixed(2), 'ms');
-          if (chunkCount > 0) {
-            console.log('[Gemini] Average chunk time:', (totalTime / chunkCount).toFixed(2), 'ms');
-          }
           break;
         }
         
@@ -687,11 +631,6 @@ FORMAT: Plain text only. No markdown. No asterisks. No code fences. No brackets.
         }
         
         lastChunkTime = Date.now();
-        
-        if (!firstChunkTime) {
-          firstChunkTime = performance.now() - startTime;
-          console.log('[Gemini] First chunk received in:', firstChunkTime.toFixed(2), 'ms');
-        }
         
         buffer += decoder.decode(value, { stream: true });
         
@@ -713,7 +652,6 @@ FORMAT: Plain text only. No markdown. No asterisks. No code fences. No brackets.
                 
                 // Check for buffer overflow attack
                 if (fullResponse.length > MAX_RESPONSE_LENGTH) {
-                  console.error('[Gemini] Response exceeded maximum length');
                   streamAborted = true;
                   throw new Error('Response too large');
                 }
@@ -722,7 +660,7 @@ FORMAT: Plain text only. No markdown. No asterisks. No code fences. No brackets.
               }
             } catch (e) {
               if (streamAborted) throw e;
-              console.error('[Gemini] Parse error:', e, 'Line:', data.substring(0, 100));
+              // Skip malformed JSON
             }
           }
         }
@@ -745,7 +683,6 @@ FORMAT: Plain text only. No markdown. No asterisks. No code fences. No brackets.
             streamCallback(content, false);
           }
         } catch (e) {
-          console.error('[Gemini] Final buffer parse error:', e);
           throw e;
         }
       }
@@ -755,7 +692,7 @@ FORMAT: Plain text only. No markdown. No asterisks. No code fences. No brackets.
       try {
         await reader.cancel();
       } catch (cancelError) {
-        console.error('[Gemini] Error canceling reader:', cancelError);
+        // Reader already released
       }
       throw error;
     } finally {
@@ -770,13 +707,11 @@ FORMAT: Plain text only. No markdown. No asterisks. No code fences. No brackets.
       // Already released
     }
     
-    console.log('[Gemini] Full response length:', fullResponse.length, 'characters');
     streamCallback('', true);
     return fullResponse;
     
   } catch (error) {
     if (timeoutId) clearTimeout(timeoutId);
-    console.error('[Gemini] Request error:', error);
     throw error;
   }
 }
@@ -797,8 +732,6 @@ async function testConnection(provider, apiKey) {
     if (!apiKey || typeof apiKey !== 'string' || apiKey.length < 10) {
         throw new Error('Invalid API key format');
     }
-    
-    console.log(`[TEST] Testing connection for ${provider}...`);
     
     // Set timeout for connection test
     const timeoutMs = 15000; // 15 seconds
@@ -825,16 +758,12 @@ async function testConnection(provider, apiKey) {
                 body: JSON.stringify(body)
             });
             
-            console.log(`[TEST] Gemini response status:`, response.status);
-            
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                console.error(`[TEST] Gemini error:`, errorData);
                 const errorMsg = sanitizeErrorMessage(errorData.error?.message || `Connection failed: ${response.status}`);
                 throw new Error(errorMsg);
             }
             
-            console.log(`[TEST] Gemini connection successful`);
             return { success: true, provider: config.name };
         }
         
@@ -856,16 +785,12 @@ async function testConnection(provider, apiKey) {
             body: JSON.stringify(body)
         });
         
-        console.log(`[TEST] ${provider.toUpperCase()} response status:`, response.status);
-        
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            console.error(`[TEST] ${provider.toUpperCase()} error:`, errorData);
             const errorMsg = sanitizeErrorMessage(errorData.error?.message || `Connection failed: ${response.status}`);
             throw new Error(errorMsg);
         }
         
-        console.log(`[TEST] ${provider.toUpperCase()} connection successful`);
         return { success: true, provider: config.name };
     })();
     
@@ -915,8 +840,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                   requestId: message.requestId
                 }).then(() => {
                   if (chunk) chunksSent++;
-                }).catch(err => {
-                  console.error('[Ryco] Failed to send chunk:', err);
+                }).catch(() => {
                   streamFailed = true;
                 });
               }
@@ -984,14 +908,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           return { success: false, error: 'Unknown message type' };
       }
     } catch (error) {
-      console.error('[Ryco] Message handler error:', error);
       // Sanitize error message before sending
       return { success: false, error: sanitizeErrorMessage(error.message) };
     }
   };
   
   handleAsync().then(sendResponse).catch(error => {
-    console.error('[Ryco] Async handler error:', error);
     sendResponse({ success: false, error: error.message || 'Internal error' });
   });
   
@@ -1009,10 +931,5 @@ chrome.runtime.onInstalled.addListener(async (details) => {
       apiKeys: {},
       userDetails: {}
     });
-    
-    console.log('Ryco installed successfully');
   }
 });
-
-// Log service worker activation
-console.log('Ryco Background Service Worker loaded');
