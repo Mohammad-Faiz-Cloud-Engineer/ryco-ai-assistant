@@ -90,11 +90,17 @@ body {
     font-size: var(--ryco-font-size-base);
     color: var(--ryco-text-primary);
     background: var(--ryco-bg-primary);
-    background-attachment: fixed;
     width: 380px;
-    min-height: 520px;
-    overflow-x: hidden;
+    height: 520px;
+    margin: 0;
+    overflow: hidden;
     position: relative;
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 /* Glassmorphism Sub-styles */
@@ -260,7 +266,9 @@ body.light .icon-light {
 .ryco-content {
     padding: var(--ryco-space-4);
     overflow-y: auto;
-    max-height: 380px;
+    flex: 1;
+    overscroll-behavior: contain;
+    transform: translateZ(0);
 }
 
 @keyframes panelFadeIn {
