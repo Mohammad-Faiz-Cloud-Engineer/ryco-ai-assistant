@@ -116,10 +116,14 @@ const PROVIDERS = {
   gemini: {
     name: 'Google Gemini',
     endpoint: 'https://generativelanguage.googleapis.com/v1beta/models',
-    defaultModel: 'gemini-3-flash-preview',
+    defaultModel: 'gemini-3.1-flash-preview',
     models: [
-      'gemini-3-pro-preview',
-      'gemini-3-flash-preview',
+      // Gemini 3.1 Series (Current - April 2026)
+      'gemini-3.1-pro-preview',
+      'gemini-3.1-flash-preview',
+      'gemini-3.1-flash-lite-preview',
+      
+      // Auto-updating models (Recommended)
       'gemini-flash-latest',
       'gemini-flash-lite-latest'
     ],
@@ -130,8 +134,17 @@ const PROVIDERS = {
     endpoint: 'https://api.openai.com/v1/chat/completions',
     defaultModel: 'gpt-4o',
     models: [
+      // GPT-4o still available in API (April 2026)
       'gpt-4o',
       'gpt-4o-mini',
+      
+      // GPT-5 Series (Current - April 2026)
+      'gpt-5.2',
+      'gpt-5.3-instant',
+      'gpt-5.4-thinking',
+      'gpt-5.4-pro',
+      
+      // Legacy models (may still be available)
       'gpt-4-turbo',
       'gpt-3.5-turbo'
     ],
