@@ -213,6 +213,18 @@ function toggleTheme() {
     saveSettings({ theme: settings.theme });
 }
 
+/**
+ * Escapes HTML to prevent XSS attacks
+ * @param {string} text - Text to escape
+ * @returns {string} Escaped HTML
+ */
+function escapeHtml(text) {
+    if (!text || typeof text !== 'string') return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // ========== Model Selectors ==========
 function renderModelSelectors() {
     if (!elements.modelSection) return;
@@ -227,11 +239,11 @@ function renderModelSelectors() {
         const selectedModel = settings.selectedModels[key] || provider.defaultModel;
 
         card.innerHTML = `
-      <h4>${provider.name} Model</h4>
-      <select class="ryco-select" data-provider="${key}">
+      <h4>${escapeHtml(provider.name)} Model</h4>
+      <select class="ryco-select" data-provider="${escapeHtml(key)}">
         ${provider.models.map(model => `
-          <option value="${model}" ${model === selectedModel ? 'selected' : ''}>
-            ${model}
+          <option value="${escapeHtml(model)}" ${model === selectedModel ? 'selected' : ''}>
+            ${escapeHtml(model)}
           </option>
         `).join('')}
       </select>
