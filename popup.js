@@ -48,10 +48,7 @@ async function init() {
     } catch (error) {
         console.error('[Ryco] Initialization error:', error);
         // Show error state in UI
-        const errorMsg = document.createElement('div');
-        errorMsg.style.cssText = 'padding: 20px; text-align: center; color: var(--ryco-error);';
-        errorMsg.textContent = 'Failed to load settings. Please refresh.';
-        elements.app?.appendChild(errorMsg);
+        showErrorState('Failed to load settings. Please refresh the page.');
     }
 }
 
@@ -220,6 +217,7 @@ function toggleTheme() {
 function renderModelSelectors() {
     if (!elements.modelSection) return;
     
+    // Clear existing content and listeners
     elements.modelSection.innerHTML = '';
 
     for (const [key, provider] of Object.entries(providers)) {
@@ -367,14 +365,38 @@ function updateProviderStatuses() {
 }
 
 // ========== Settings Persistence ==========
+let saveSettingsPending = false;
+let saveSettingsQueue = [];
+
 async function saveSettings(partial) {
+    // Queue the save if one is already in progress
+    if (saveSettingsPending) {
+        saveSettingsQueue.push(partial);
+        return;
+    }
+    
+    saveSettingsPending = true;
+    
     try {
         await chrome.runtime.sendMessage({
             type: 'RYCO_UPDATE_SETTINGS',
             settings: partial
         });
+        
+        // Process queued saves
+        while (saveSettingsQueue.length > 0) {
+            const queuedPartial = saveSettingsQueue.shift();
+            await chrome.runtime.sendMessage({
+                type: 'RYCO_UPDATE_SETTINGS',
+                settings: queuedPartial
+            });
+        }
     } catch (error) {
         console.error('Failed to save settings:', error);
+        // Clear queue on error to prevent infinite retry
+        saveSettingsQueue = [];
+    } finally {
+        saveSettingsPending = false;
     }
 }
 
@@ -469,4 +491,9 @@ async function saveUserDetails() {
 }
 
 // ========== Initialize ==========
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', () => {
+    init().catch(error => {
+        console.error('[Ryco] Fatal initialization error:', error);
+        showErrorState('Critical error loading extension. Please reinstall.');
+    });
+});

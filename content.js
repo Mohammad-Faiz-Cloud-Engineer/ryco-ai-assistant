@@ -64,11 +64,13 @@
     async function loadTheme() {
         try {
             const response = await chrome.runtime.sendMessage({ type: 'RYCO_GET_THEME' });
-            if (response?.success) {
+            if (response?.success && response.theme) {
                 currentTheme = response.theme;
             }
         } catch (e) {
-            // Use default theme
+            // Background script not ready or extension just installed
+            console.warn('[Ryco] Could not load theme, using default:', e);
+            currentTheme = 'dark'; // Explicit fallback
         }
     }
 
@@ -83,18 +85,22 @@
     }
 
     async function injectStyles(shadow) {
-        // CSP-safe approach: Use <link> tags instead of fetch()
-        // This bypasses Content Security Policy restrictions on high-security sites
-        const link1 = document.createElement('link');
-        link1.rel = 'stylesheet';
-        link1.href = chrome.runtime.getURL('styles/tokens.css');
+        const tokensUrl = chrome.runtime.getURL('styles/tokens.css');
+        const injectUrl = chrome.runtime.getURL('styles/inject.css');
 
-        const link2 = document.createElement('link');
-        link2.rel = 'stylesheet';
-        link2.href = chrome.runtime.getURL('styles/inject.css');
+        const [tokensRes, injectRes] = await Promise.all([
+            fetch(tokensUrl),
+            fetch(injectUrl)
+        ]);
 
-        shadow.appendChild(link1);
-        shadow.appendChild(link2);
+        const [tokensCSS, injectCSS] = await Promise.all([
+            tokensRes.text(),
+            injectRes.text()
+        ]);
+
+        const style = document.createElement('style');
+        style.textContent = tokensCSS + '\n' + injectCSS;
+        shadow.appendChild(style);
     }
 
     // ========== Icons ==========
@@ -111,31 +117,30 @@
 
     // ========== Toast Notification System ==========
     function initToastContainer() {
-        if (toastContainer) return Promise.resolve();
+        if (toastContainer) return;
 
         const { host, shadow } = createShadowHost();
         host.style.cssText = 'all: initial;';
 
-        injectStyles(shadow);
-        
-        const wrapper = document.createElement('div');
-        wrapper.setAttribute('data-theme', currentTheme);
+        injectStyles(shadow).then(() => {
+            const wrapper = document.createElement('div');
+            wrapper.setAttribute('data-theme', currentTheme);
 
-        const container = document.createElement('div');
-        container.className = 'ryco-toast-container';
+            const container = document.createElement('div');
+            container.className = 'ryco-toast-container';
 
-        wrapper.appendChild(container);
-        shadow.appendChild(wrapper);
+            wrapper.appendChild(container);
+            shadow.appendChild(wrapper);
 
-        toastContainer = { host, shadow, container, wrapper };
-        
-        // Return resolved promise for consistent async handling
-        return Promise.resolve();
+            toastContainer = { host, shadow, container, wrapper };
+        });
     }
 
-    async function showToast(type, title, message, duration = 4000) {
+    function showToast(type, title, message, duration = 4000) {
         if (!toastContainer) {
-            await initToastContainer();
+            initToastContainer();
+            setTimeout(() => showToast(type, title, message, duration), 100);
+            return;
         }
 
         const toast = document.createElement('div');
@@ -174,7 +179,7 @@
 
         const { host, shadow } = createShadowHost();
 
-        injectStyles(shadow);
+        await injectStyles(shadow);
 
         // Get settings for provider info
         let providerName = 'AI';
@@ -308,15 +313,20 @@
     }
 
     /**
-     * Escapes HTML to prevent XSS attacks
+     * Escapes HTML to prevent XSS attacks with comprehensive sanitization
      * @param {string} text - Text to escape
      * @returns {string} Escaped HTML
      */
     function escapeHtml(text) {
         if (typeof text !== 'string') return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+        // Comprehensive HTML entity escaping
+        return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#x27;')
+            .replace(/\//g, '&#x2F;');
     }
 
     /**
@@ -576,6 +586,10 @@
      */
     function closeCommandBar() {
         if (!activeCommandBar) return;
+        
+        // Prevent concurrent cleanup
+        if (activeCommandBar.isClosing) return;
+        activeCommandBar.isClosing = true;
 
         try {
             // Add closing animation
@@ -825,24 +839,55 @@
 
     // ========== MutationObserver for Dynamic Content ==========
     const trackedDynamicElements = new WeakSet();
+    const elementCleanupMap = new WeakMap(); // Track cleanup functions
     
     const observerCallback = debounce((mutations) => {
         for (const mutation of mutations) {
+            // Handle removed nodes - cleanup listeners
+            for (const node of mutation.removedNodes) {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    const cleanup = elementCleanupMap.get(node);
+                    if (cleanup) {
+                        cleanup();
+                        elementCleanupMap.delete(node);
+                    }
+                }
+            }
+            
+            // Handle added nodes - attach listeners
             for (const node of mutation.addedNodes) {
                 if (node.nodeType === Node.ELEMENT_NODE) {
                     // Check if the added node is an editable element
                     if (isEditableElement(node) && !trackedDynamicElements.has(node)) {
                         trackedDynamicElements.add(node);
-                        node.addEventListener('input', handleInput);
-                        node.addEventListener('keyup', handleKeyUp);
+                        const inputHandler = (e) => handleInput(e);
+                        const keyupHandler = (e) => handleKeyUp(e);
+                        
+                        node.addEventListener('input', inputHandler);
+                        node.addEventListener('keyup', keyupHandler);
+                        
+                        // Store cleanup function
+                        elementCleanupMap.set(node, () => {
+                            node.removeEventListener('input', inputHandler);
+                            node.removeEventListener('keyup', keyupHandler);
+                        });
                     }
                     // Check for editable children
                     const editables = node.querySelectorAll?.('input, textarea, [contenteditable="true"]');
                     editables?.forEach(el => {
                         if (isEditableElement(el) && !trackedDynamicElements.has(el)) {
                             trackedDynamicElements.add(el);
-                            el.addEventListener('input', handleInput);
-                            el.addEventListener('keyup', handleKeyUp);
+                            const inputHandler = (e) => handleInput(e);
+                            const keyupHandler = (e) => handleKeyUp(e);
+                            
+                            el.addEventListener('input', inputHandler);
+                            el.addEventListener('keyup', keyupHandler);
+                            
+                            // Store cleanup function
+                            elementCleanupMap.set(el, () => {
+                                el.removeEventListener('input', inputHandler);
+                                el.removeEventListener('keyup', keyupHandler);
+                            });
                         }
                     });
                 }

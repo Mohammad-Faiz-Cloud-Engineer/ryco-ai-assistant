@@ -4,36 +4,18 @@
  */
 
 // ========== Performance Constants ==========
-/**
- * Performance configuration for extreme unpredictability and human-like output
- * 
- * TEMPERATURE: 1.1 - Above normal maximum for creative, varied responses
- * TOP_K: 40 - Capped for Gemini compatibility (max supported across all models)
- * TOP_P: 0.85 - Lower for more diverse, unexpected token choices
- * FREQUENCY_PENALTY: 0.7 - Strong anti-repetition
- * PRESENCE_PENALTY: 0.6 - Strong topic diversity
- * 
- * IMPACT: Combined with extensive system prompts about casual language,
- * contractions, and avoiding AI patterns, this creates a "stream of consciousness"
- * feel that's distinctly human-like, especially on Gemini 3 Deep-Think models.
- * 
- * TEMPERATURE TUNING GUIDE:
- * - 1.1: Perfect for DeepSeek R1, Llama 3.1 405B, Gemini Deep-Think (creative personality)
- * - 1.0: Balanced for most models (recommended if you see repetition)
- * - 0.9: Safe fallback for GPT-4o-mini (prevents "looping" or weird characters)
- * 
- * TROUBLESHOOTING: If the AI gets "drunk", repeats itself, or outputs strange characters,
- * lower TEMPERATURE to 1.0 or 0.9. This is especially common with smaller models like
- * GPT-4o-mini when temperature is too high.
- */
 const PERFORMANCE_CONFIG = {
-  TEMPERATURE: 1.1,  // Above normal maximum for extreme unpredictability
+  TEMPERATURE: 1.2,  // Above normal maximum for extreme unpredictability
   MAX_TOKENS: 8192,
   TOP_P: 0.85,  // Lower for more diverse, unexpected choices
-  TOP_K: 40,  // Capped at 40 for Gemini compatibility (max supported)
+  TOP_K: 80,  // Very high for maximum vocabulary diversity
   FREQUENCY_PENALTY: 0.7,  // Very strong anti-repetition
   PRESENCE_PENALTY: 0.6  // Very strong topic diversity
 };
+
+// ========== Security Constants ==========
+const MAX_RESPONSE_LENGTH = 50000; // Prevent memory exhaustion attacks
+const MAX_ERROR_MESSAGE_LENGTH = 200; // Prevent XSS via error messages
 
 // ========== Crypto Utilities ==========
 const CRYPTO_KEY_NAME = 'ryco-encryption-key';
@@ -129,51 +111,31 @@ const PROVIDERS = {
       'mistralai/mistral-7b-instruct-v0.3',
       'mistralai/mistral-small-24b-instruct-2501'
     ],
-    supportsStreaming: true,
-    // NVIDIA-specific tuning: Llama models benefit from slightly lower temperature
-    performance: {
-      temperature: 1.0,  // Balanced for Llama's casual style
-      top_p: 0.85,
-      frequency_penalty: 0.7,
-      presence_penalty: 0.6
-    }
+    supportsStreaming: true
   },
- gemini: {
+  gemini: {
     name: 'Google Gemini',
     endpoint: 'https://generativelanguage.googleapis.com/v1beta/models',
     defaultModel: 'gemini-3-flash-preview',
     models: [
       'gemini-3-pro-preview',
       'gemini-3-flash-preview',
-      'gemini-3-deep-think', // New specialized reasoning
-      'gemini-2.5-flash-lite', // Stable fallback until March shutdown
+      'gemini-flash-latest',
+      'gemini-flash-lite-latest'
     ],
-    supportsStreaming: true,
-    // Gemini-specific tuning: Higher temperature for deep-think reasoning
-    performance: {
-      temperature: 1.1,  // Enables lateral thinking on deep-think models
-      top_p: 0.85,
-      top_k: 40,
-      frequency_penalty: 0.7,
-      presence_penalty: 0.6
-    }
+    supportsStreaming: true
   },
   openai: {
     name: 'OpenAI',
-    endpoint: 'https://api.openai.com/v1/chat/completions',  // Standard stable endpoint
-    defaultModel: 'gpt-4.1',
+    endpoint: 'https://api.openai.com/v1/chat/completions',
+    defaultModel: 'gpt-4o',
     models: [
-      'gpt-4.1',        // Latest model
-      'gpt-4.1-mini',   // Efficient variant
-      'gpt-4o',         // Previous generation
-      'gpt-4o-mini'     // Previous generation mini
+      'gpt-4o',
+      'gpt-4o-mini',
+      'gpt-4-turbo',
+      'gpt-3.5-turbo'
     ],
-    supportsStreaming: true,
-    // OpenAI-specific tuning: Moderate temperature for professional tone
-    performance: {
-      temperature: 0.9,  // Balanced creativity without chaos
-      top_p: 0.85
-    }
+    supportsStreaming: true
   }
 };
 
@@ -284,54 +246,6 @@ async function getActiveModel() {
   }
 }
 
-// ========== Retry Utilities ==========
-/**
- * Retries a fetch request with exponential backoff for rate limit errors
- * @param {Function} fetchFn - Async function that returns a fetch promise
- * @param {number} maxRetries - Maximum number of retry attempts (default: 3)
- * @param {number} baseDelay - Base delay in ms for exponential backoff (default: 1000)
- * @returns {Promise<Response>} Fetch response
- */
-async function fetchWithRetry(fetchFn, maxRetries = 3, baseDelay = 1000) {
-  let lastError;
-  
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      const response = await fetchFn();
-      
-      // If rate limited (429), retry with exponential backoff
-      if (response.status === 429 && attempt < maxRetries) {
-        const retryAfter = response.headers.get('Retry-After');
-        const delay = retryAfter 
-          ? parseInt(retryAfter) * 1000 
-          : baseDelay * Math.pow(2, attempt);
-        
-        console.warn(`[Ryco] Rate limited (429), retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        continue;
-      }
-      
-      // Return response for any other status (including errors)
-      return response;
-      
-    } catch (error) {
-      lastError = error;
-      
-      // Don't retry on network errors if it's the last attempt
-      if (attempt === maxRetries) {
-        throw error;
-      }
-      
-      // Exponential backoff for network errors
-      const delay = baseDelay * Math.pow(2, attempt);
-      console.warn(`[Ryco] Network error, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
-      await new Promise(resolve => setTimeout(resolve, delay));
-    }
-  }
-  
-  throw lastError || new Error('Max retries exceeded');
-}
-
 // ========== User Context Builder ==========
 /**
  * Builds a sanitized user context string from user details
@@ -376,23 +290,24 @@ function buildUserContext(userDetails) {
   return `User Profile: ${parts.join(', ')}.`;
 }
 
-// ========== API Request Handler ==========
 /**
- * Sends chat request to active provider with streaming support
- * 
- * IMPORTANT - OpenAI Endpoint Compatibility:
- * This uses the 2026 "Responses API" (v1/responses) which supports:
- * - gpt-4.1, gpt-4.1-mini (native support)
- * - gpt-4o, gpt-4o-mini (migrated models)
- * 
- * If using older API keys or non-migrated models, you may get 404 errors.
- * In that case, switch to v1/chat/completions endpoint and adjust the
- * request body format (use 'messages' instead of 'input').
- * 
- * @param {string} prompt - User prompt
- * @param {Function} streamCallback - Callback for streaming chunks
- * @returns {Promise<string>} Full response text
+ * Sanitizes error messages to prevent XSS
+ * @param {string} message - Error message to sanitize
+ * @returns {string} Sanitized error message
  */
+function sanitizeErrorMessage(message) {
+  if (!message || typeof message !== 'string') {
+    return 'An unknown error occurred';
+  }
+  // Remove HTML tags and limit length
+  return message
+    .replace(/<[^>]*>/g, '')
+    .replace(/[<>'"]/g, '')
+    .substring(0, MAX_ERROR_MESSAGE_LENGTH)
+    .trim() || 'An error occurred';
+}
+
+// ========== API Request Handler ==========
 async function sendChatRequest(prompt, streamCallback) {
   const settings = await getSettings();
   const provider = PROVIDERS[settings.activeProvider];
@@ -463,28 +378,23 @@ async function sendChatRequest(prompt, streamCallback) {
     content: prompt
   });
   
-  // Standard OpenAI-compatible format for both NVIDIA and OpenAI
   const body = {
     model: model,
     messages: messages,
     stream: true,
-    temperature: provider.performance?.temperature || PERFORMANCE_CONFIG.TEMPERATURE,
+    temperature: PERFORMANCE_CONFIG.TEMPERATURE,
     max_tokens: PERFORMANCE_CONFIG.MAX_TOKENS,
-    top_p: provider.performance?.top_p || PERFORMANCE_CONFIG.TOP_P,
-    frequency_penalty: provider.performance?.frequency_penalty || PERFORMANCE_CONFIG.FREQUENCY_PENALTY,
-    presence_penalty: provider.performance?.presence_penalty || PERFORMANCE_CONFIG.PRESENCE_PENALTY
+    top_p: PERFORMANCE_CONFIG.TOP_P,
+    frequency_penalty: PERFORMANCE_CONFIG.FREQUENCY_PENALTY,
+    presence_penalty: PERFORMANCE_CONFIG.PRESENCE_PENALTY
   };
   
   try {
-    const response = await fetchWithRetry(() => 
-      fetch(provider.endpoint, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(body),
-        // Keep service worker alive during long requests (Gemini deep-think models)
-        keepalive: true
-      })
-    );
+    const response = await fetch(provider.endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body)
+    });
     
     const responseTime = performance.now() - startTime;
     console.log(`[${settings.activeProvider.toUpperCase()}] Response received in:`, responseTime.toFixed(2), 'ms');
@@ -493,56 +403,35 @@ async function sendChatRequest(prompt, streamCallback) {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error(`[${settings.activeProvider.toUpperCase()}] Error response:`, errorData);
-      throw new Error(errorData.error?.message || `API Error: ${response.status}`);
+      const errorMsg = sanitizeErrorMessage(errorData.error?.message || `API Error: ${response.status}`);
+      throw new Error(errorMsg);
     }
     
-    return await handleOpenAIStream(response, startTime, settings.activeProvider, streamCallback);
-    
-  } catch (error) {
-    console.error(`[${settings.activeProvider.toUpperCase()}] Request error:`, error);
-    throw error;
-  }
-}
-
-/**
- * Handles OpenAI-compatible streaming responses
- * @param {Response} response - Fetch response object
- * @param {number} startTime - Request start time
- * @param {string} provider - Provider name
- * @param {Function} streamCallback - Callback for streaming chunks
- * @returns {Promise<string>} Full response text
- */
-async function handleOpenAIStream(response, startTime, provider, streamCallback) {
     // Handle SSE streaming
     const reader = response.body.getReader();
-    const decoder = new TextDecoder('utf-8', { fatal: false });
+    const decoder = new TextDecoder('utf-8');
     let fullResponse = '';
     let buffer = '';
     let chunkCount = 0;
     let firstChunkTime = null;
-    
-    // Keep service worker alive during long streams (Deep-Think models)
-    let keepAliveInterval = setInterval(() => {
-      // Ping to prevent service worker sleep
-      console.log(`[${provider.toUpperCase()}] Stream active, chunks: ${chunkCount}`);
-    }, 20000); // Every 20 seconds
+    let streamAborted = false;
     
     try {
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
           const totalTime = performance.now() - startTime;
-          console.log(`[${provider.toUpperCase()}] Stream complete. Total chunks:`, chunkCount);
-          console.log(`[${provider.toUpperCase()}] Total time:`, totalTime.toFixed(2), 'ms');
+          console.log(`[${settings.activeProvider.toUpperCase()}] Stream complete. Total chunks:`, chunkCount);
+          console.log(`[${settings.activeProvider.toUpperCase()}] Total time:`, totalTime.toFixed(2), 'ms');
           if (chunkCount > 0) {
-            console.log(`[${provider.toUpperCase()}] Average chunk time:`, (totalTime / chunkCount).toFixed(2), 'ms');
+            console.log(`[${settings.activeProvider.toUpperCase()}] Average chunk time:`, (totalTime / chunkCount).toFixed(2), 'ms');
           }
           break;
         }
         
         if (!firstChunkTime) {
           firstChunkTime = performance.now() - startTime;
-          console.log(`[${provider.toUpperCase()}] First chunk received in:`, firstChunkTime.toFixed(2), 'ms');
+          console.log(`[${settings.activeProvider.toUpperCase()}] First chunk received in:`, firstChunkTime.toFixed(2), 'ms');
         }
         
         buffer += decoder.decode(value, { stream: true });
@@ -557,38 +446,53 @@ async function handleOpenAIStream(response, startTime, provider, streamCallback)
             
             try {
               const parsed = JSON.parse(data);
-              
-              // FIX: Standard OpenAI format - choices[0].delta.content
               const content = parsed.choices?.[0]?.delta?.content;
-              
               if (content) {
                 chunkCount++;
                 fullResponse += content;
+                
+                // Check for buffer overflow attack
+                if (fullResponse.length > MAX_RESPONSE_LENGTH) {
+                  console.error(`[${settings.activeProvider.toUpperCase()}] Response exceeded maximum length`);
+                  streamAborted = true;
+                  throw new Error('Response too large');
+                }
+                
                 streamCallback(content, false);
               }
             } catch (e) {
+              if (streamAborted) throw e;
               // Skip malformed JSON
             }
           }
         }
       }
-    } finally {
-      reader.releaseLock();
-      clearInterval(keepAliveInterval); // Stop heartbeat
-      streamCallback('', true); // Signal completion
+    } catch (error) {
+      // Ensure reader is released on error
+      try {
+        await reader.cancel();
+      } catch (cancelError) {
+        console.error(`[${settings.activeProvider.toUpperCase()}] Error canceling reader:`, cancelError);
+      }
+      throw error;
     }
     
-    console.log(`[${provider.toUpperCase()}] Full response length:`, fullResponse.length, 'characters');
+    // Release lock after loop completes
+    reader.releaseLock();
+    
+    console.log(`[${settings.activeProvider.toUpperCase()}] Full response length:`, fullResponse.length, 'characters');
+    streamCallback('', true);
     return fullResponse;
+    
+  } catch (error) {
+    console.error(`[${settings.activeProvider.toUpperCase()}] Request error:`, error);
+    throw error;
+  }
 }
 
 // ========== Gemini-specific Request Handler ==========
 async function sendGeminiRequest(prompt, model, apiKey, streamCallback, userContext = '') {
-  // Get provider config for performance settings
-  const providerConfig = PROVIDERS.gemini;
-  
-  // Build system instruction using dedicated field (2026 Gemini 3.0+ standard)
-  let systemInstructionText = `You are Ryco by Mohammad Faiz. Write like a real human typing quickly - casual, helpful, natural.
+  let systemPrompt = `You are Ryco by Mohammad Faiz. Write like a real human typing quickly - casual, helpful, natural.
 
 WRITING STYLE: Mix short and long sentences. Use tons of contractions (don't, can't, won't, I'm, you're, it's, could've, should've). Start sentences with And, But, So, Well, Look, Honestly, Actually. Add filler words constantly (just, really, actually, basically, honestly, literally, kind of, sort of, you know, I mean, like). Use casual slang (gonna, wanna, gotta, kinda, sorta, yeah, nah).
 
@@ -603,30 +507,26 @@ GRAMMAR & STRUCTURE: Break grammar rules naturally. Use sentence fragments. Use 
 FORMAT: Plain text only. No markdown. No asterisks. No code fences. No brackets. No symbols. For code, paste directly. For emails, be casual but professional - not like a template. Write like you're typing fast without overthinking.`;
   
   if (userContext) {
-    systemInstructionText += `\n\n${userContext}`;
+    systemPrompt += ` ${userContext}`;
   }
 
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
   
   const body = {
-    system_instruction: {
-      parts: [{ text: systemInstructionText }]
-    },
     contents: [
       {
         role: 'user',
-        parts: [{ text: prompt }]
+        parts: [
+          { text: systemPrompt + '\n\nUser: ' + prompt }
+        ]
       }
     ],
     generationConfig: {
-      temperature: providerConfig.performance?.temperature || PERFORMANCE_CONFIG.TEMPERATURE,
-      topK: providerConfig.performance?.top_k || PERFORMANCE_CONFIG.TOP_K,
-      topP: providerConfig.performance?.top_p || PERFORMANCE_CONFIG.TOP_P,
-      candidateCount: 1,  // Strictly enforce single candidate to prevent extra token costs
-      maxOutputTokens: PERFORMANCE_CONFIG.MAX_TOKENS,
-      // FIX: Use snake_case for Google API
-      presence_penalty: providerConfig.performance?.presence_penalty || PERFORMANCE_CONFIG.PRESENCE_PENALTY,
-      frequency_penalty: providerConfig.performance?.frequency_penalty || PERFORMANCE_CONFIG.FREQUENCY_PENALTY
+      temperature: PERFORMANCE_CONFIG.TEMPERATURE,
+      topK: PERFORMANCE_CONFIG.TOP_K,
+      topP: PERFORMANCE_CONFIG.TOP_P,
+      candidateCount: 1,
+      maxOutputTokens: PERFORMANCE_CONFIG.MAX_TOKENS
     },
     safetySettings: [
       {
@@ -652,17 +552,13 @@ FORMAT: Plain text only. No markdown. No asterisks. No code fences. No brackets.
   const startTime = performance.now();
   
   try {
-    const response = await fetchWithRetry(() =>
-      fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body),
-        // Keep service worker alive during long requests (Gemini deep-think models)
-        keepalive: true
-      })
-    );
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
     
     const responseTime = performance.now() - startTime;
     console.log('[Gemini] Response received in:', responseTime.toFixed(2), 'ms');
@@ -671,20 +567,17 @@ FORMAT: Plain text only. No markdown. No asterisks. No code fences. No brackets.
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error('[Gemini] Error response:', errorData);
-      throw new Error(errorData.error?.message || `API Error: ${response.status}`);
+      const errorMsg = sanitizeErrorMessage(errorData.error?.message || `API Error: ${response.status}`);
+      throw new Error(errorMsg);
     }
     
     const reader = response.body.getReader();
-    const decoder = new TextDecoder('utf-8', { fatal: false });
+    const decoder = new TextDecoder('utf-8');
     let fullResponse = '';
     let buffer = '';
     let chunkCount = 0;
     let firstChunkTime = null;
-    
-    // Keep service worker alive during long Gemini Deep-Think streams
-    let keepAliveInterval = setInterval(() => {
-      console.log('[Gemini] Deep-Think stream active, chunks:', chunkCount);
-    }, 20000); // Every 20 seconds
+    let streamAborted = false;
     
     try {
       while (true) {
@@ -693,7 +586,9 @@ FORMAT: Plain text only. No markdown. No asterisks. No code fences. No brackets.
           const totalTime = performance.now() - startTime;
           console.log('[Gemini] Stream complete. Total chunks:', chunkCount);
           console.log('[Gemini] Total time:', totalTime.toFixed(2), 'ms');
-          console.log('[Gemini] Average chunk time:', (totalTime / chunkCount).toFixed(2), 'ms');
+          if (chunkCount > 0) {
+            console.log('[Gemini] Average chunk time:', (totalTime / chunkCount).toFixed(2), 'ms');
+          }
           break;
         }
         
@@ -705,73 +600,74 @@ FORMAT: Plain text only. No markdown. No asterisks. No code fences. No brackets.
         buffer += decoder.decode(value, { stream: true });
         
         // Gemini SSE format: data: {...}
-        // Handle heartbeats, [DONE] markers, and fragmented JSON
         const lines = buffer.split('\n');
         buffer = lines.pop() || '';
         
         for (const line of lines) {
-          const sanitizedLine = line.trim();
-          
-          // Skip empty lines and heartbeat keep-alives
-          if (!sanitizedLine || sanitizedLine === 'data: [DONE]') continue;
-          
-          if (sanitizedLine.startsWith('data: ')) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6).trim();
+            if (!data) continue;
+            
             try {
-              const jsonStr = sanitizedLine.slice(6).trim();
-              
-              // Skip empty data blocks
-              if (!jsonStr) continue;
-              
-              const parsed = JSON.parse(jsonStr);
-              
-              // Gemini 3.0+ path: candidates[0].content.parts[0].text
-              const part = parsed.candidates?.[0]?.content?.parts?.[0];
-              const content = part?.text;
-              const isThinking = part?.thought; // 2026 Deep-Think internal reasoning
-              
-              // Only stream actual answer, not internal thought process
-              if (content && !isThinking) {
+              const parsed = JSON.parse(data);
+              const content = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (content) {
                 chunkCount++;
                 fullResponse += content;
+                
+                // Check for buffer overflow attack
+                if (fullResponse.length > MAX_RESPONSE_LENGTH) {
+                  console.error('[Gemini] Response exceeded maximum length');
+                  streamAborted = true;
+                  throw new Error('Response too large');
+                }
+                
                 streamCallback(content, false);
               }
             } catch (e) {
-              // Skip malformed JSON - let buffer naturally accumulate
-              console.warn('[Gemini] JSON parse error, skipping fragment');
+              if (streamAborted) throw e;
+              console.error('[Gemini] Parse error:', e, 'Line:', data.substring(0, 100));
             }
           }
         }
       }
       
       // Process any remaining buffer
-      if (buffer.trim()) {
-        const sanitizedLine = buffer.trim();
-        
-        if (sanitizedLine.startsWith('data: ')) {
-          try {
-            const jsonStr = sanitizedLine.slice(6).trim();
+      if (buffer.trim() && buffer.startsWith('data: ')) {
+        try {
+          const data = buffer.slice(6).trim();
+          const parsed = JSON.parse(data);
+          const content = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (content) {
+            fullResponse += content;
             
-            if (jsonStr && jsonStr !== '[DONE]') {
-              const parsed = JSON.parse(jsonStr);
-              const content = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
-              
-              if (content) {
-                fullResponse += content;
-                streamCallback(content, false);
-              }
+            // Final overflow check
+            if (fullResponse.length > MAX_RESPONSE_LENGTH) {
+              throw new Error('Response too large');
             }
-          } catch (e) {
-            console.warn('[Gemini] Final buffer parse error, skipping incomplete JSON');
+            
+            streamCallback(content, false);
           }
+        } catch (e) {
+          console.error('[Gemini] Final buffer parse error:', e);
+          throw e;
         }
       }
-    } finally {
-      reader.releaseLock();
-      clearInterval(keepAliveInterval); // Stop heartbeat
-      streamCallback('', true); // Signal completion
+    } catch (error) {
+      // Ensure reader is released on error
+      try {
+        await reader.cancel();
+      } catch (cancelError) {
+        console.error('[Gemini] Error canceling reader:', cancelError);
+      }
+      throw error;
     }
     
+    // Release lock after loop completes
+    reader.releaseLock();
+    
     console.log('[Gemini] Full response length:', fullResponse.length, 'characters');
+    streamCallback('', true);
     return fullResponse;
     
   } catch (error) {
@@ -815,10 +711,7 @@ async function testConnection(provider, apiKey) {
                         role: 'user',
                         parts: [{ text: 'Hi' }]
                     }
-                ],
-                generationConfig: {
-                    maxOutputTokens: 10
-                }
+                ]
             };
             
             const response = await fetch(endpoint, {
@@ -832,17 +725,8 @@ async function testConnection(provider, apiKey) {
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 console.error(`[TEST] Gemini error:`, errorData);
-                
-                // Provide more specific error messages for common Gemini issues
-                if (response.status === 400) {
-                    throw new Error('Invalid API key or request format');
-                } else if (response.status === 403) {
-                    throw new Error('API key does not have permission for this model');
-                } else if (response.status === 429) {
-                    throw new Error('Rate limit exceeded');
-                } else {
-                    throw new Error(errorData.error?.message || `Connection failed: ${response.status}`);
-                }
+                const errorMsg = sanitizeErrorMessage(errorData.error?.message || `Connection failed: ${response.status}`);
+                throw new Error(errorMsg);
             }
             
             console.log(`[TEST] Gemini connection successful`);
@@ -855,22 +739,11 @@ async function testConnection(provider, apiKey) {
             'Authorization': `Bearer ${apiKey}`
         };
         
-        let body;
-        if (provider === 'openai') {
-            // OpenAI Responses API format (minimum 16 tokens required)
-            body = {
-                model: config.defaultModel,
-                input: "Hi",
-                max_output_tokens: 32
-            };
-        } else {
-            // NVIDIA chat completions format
-            body = {
-                model: config.defaultModel,
-                messages: [{ role: 'user', content: 'Hi' }],
-                max_tokens: 10
-            };
-        }
+        const body = {
+            model: config.defaultModel,
+            messages: [{ role: 'user', content: 'Hi' }],
+            max_tokens: 10
+        };
         
         const response = await fetch(config.endpoint, {
             method: 'POST',
@@ -883,7 +756,8 @@ async function testConnection(provider, apiKey) {
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             console.error(`[TEST] ${provider.toUpperCase()} error:`, errorData);
-            throw new Error(errorData.error?.message || `Connection failed: ${response.status}`);
+            const errorMsg = sanitizeErrorMessage(errorData.error?.message || `Connection failed: ${response.status}`);
+            throw new Error(errorMsg);
         }
         
         console.log(`[TEST] ${provider.toUpperCase()} connection successful`);
@@ -919,6 +793,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             return { success: false, error: 'Invalid sender' };
           }
           
+          let streamFailed = false;
           const fullResponse = await sendChatRequest(
             message.prompt,
             (chunk, isDone) => {
@@ -927,11 +802,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 chunk,
                 isDone,
                 requestId: message.requestId
-              }).catch(() => {
-                // Silently ignore errors if tab is closed during streaming
+              }).catch(err => {
+                console.error('[Ryco] Failed to send chunk:', err);
+                streamFailed = true;
+                // Tab likely closed - abort stream
               });
             }
           );
+          
+          if (streamFailed) {
+            return { success: false, error: 'Stream interrupted - tab may have closed' };
+          }
+          
           return { success: true, response: fullResponse };
         }
         
@@ -974,7 +856,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
     } catch (error) {
       console.error('[Ryco] Message handler error:', error);
-      return { success: false, error: error.message || 'Internal error' };
+      // Sanitize error message before sending
+      return { success: false, error: sanitizeErrorMessage(error.message) };
     }
   };
   
