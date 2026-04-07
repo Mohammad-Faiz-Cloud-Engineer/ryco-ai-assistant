@@ -312,10 +312,14 @@ function sanitizeErrorMessage(message) {
   if (!message || typeof message !== 'string') {
     return 'An unknown error occurred';
   }
-  // Remove HTML tags and limit length
+  // Comprehensive HTML entity escaping to prevent XSS
   return message
-    .replace(/<[^>]*>/g, '')
-    .replace(/[<>'"]/g, '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;')
     .substring(0, MAX_ERROR_MESSAGE_LENGTH)
     .trim() || 'An error occurred';
 }
