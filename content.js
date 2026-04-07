@@ -646,7 +646,7 @@
     }
 
     /**
-     * Sends prompt to background script with error handling
+     * Sends prompt to background script with error handling and retry logic
      * @param {string} prompt - User prompt to send
      */
     async function sendPromptToBackground(prompt) {
@@ -662,6 +662,11 @@
                 throw new Error(`Prompt too long (max ${MAX_PROMPT_LENGTH} characters)`);
             }
             
+            // Check if extension context is valid
+            if (!chrome.runtime?.id) {
+                throw new Error('Extension context invalidated - please refresh the page');
+            }
+            
             await chrome.runtime.sendMessage({
                 type: 'RYCO_CHAT',
                 prompt,
@@ -669,18 +674,43 @@
             });
         } catch (error) {
             console.error('[Ryco] Failed to send prompt:', error);
-            showToast('error', 'Error', error.message || 'Failed to send request');
+            
+            // Check for specific error types
+            if (error.message?.includes('Extension context invalidated') || 
+                error.message?.includes('message port closed')) {
+                showToast('error', 'Connection Lost', 'Please refresh the page to reconnect');
+            } else {
+                showToast('error', 'Error', error.message || 'Failed to send request');
+            }
+            
             closeCommandBar();
         }
     }
 
     // ========== Stream Handler ==========
-    chrome.runtime.onMessage.addListener((message, _sender, _sendResponse) => {
+    chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         if (message.type === 'RYCO_STREAM_CHUNK') {
             handleStreamChunk(message);
+        } else if (message.type === 'RYCO_ERROR') {
+            handleStreamError(message);
         }
-        return false;
+        // Always return true to keep message channel open
+        return true;
     });
+
+    /**
+     * Handles error messages from background script
+     * @param {Object} message - Error message
+     */
+    function handleStreamError(message) {
+        if (!activeCommandBar || message.requestId !== activeCommandBar.requestId) {
+            return;
+        }
+
+        console.error('[Ryco] Stream error:', message.error);
+        showToast('error', 'Request Failed', message.error || 'An error occurred');
+        closeCommandBar();
+    }
 
     /**
      * Handles streaming response chunks with error handling and button state management
@@ -692,6 +722,11 @@
         }
 
         try {
+            // Validate message structure
+            if (!message || typeof message !== 'object') {
+                throw new Error('Invalid message structure');
+            }
+
             // Hide loading skeleton on first chunk
             if (activeCommandBar.loadingSkeleton) {
                 activeCommandBar.loadingSkeleton.remove();
@@ -707,6 +742,12 @@
 
             if (message.chunk && typeof message.chunk === 'string') {
                 activeCommandBar.response += message.chunk;
+                
+                // Validate response length
+                if (activeCommandBar.response.length > MAX_PROMPT_LENGTH * 2) {
+                    throw new Error('Response too large');
+                }
+                
                 // Sanitize before rendering
                 activeCommandBar.responseArea.innerHTML =
                     escapeHtml(activeCommandBar.response) +
@@ -728,10 +769,16 @@
                 const insertBtn = activeCommandBar.commandBar.querySelector('[data-action="insert"]');
                 if (copyBtn) copyBtn.disabled = false;
                 if (insertBtn) insertBtn.disabled = false;
+                
+                // Validate we received a response
+                if (!activeCommandBar.response || activeCommandBar.response.length === 0) {
+                    showToast('warning', 'Empty Response', 'No response received from AI');
+                }
             }
         } catch (error) {
             console.error('[Ryco] Stream chunk error:', error);
-            showToast('error', 'Error', 'Failed to process response');
+            showToast('error', 'Error', error.message || 'Failed to process response');
+            closeCommandBar();
         }
     }
 
