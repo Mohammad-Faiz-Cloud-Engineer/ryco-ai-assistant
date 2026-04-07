@@ -66,19 +66,19 @@ body {
 
 /* Light Theme */
 body.light {
-    --ryco-bg-base: #f0f4f9;
-    --ryco-bg-primary: radial-gradient(circle at 20% -10%, rgba(59, 130, 246, 0.14), transparent 50%), radial-gradient(circle at 90% 90%, rgba(6, 182, 212, 0.09), transparent 50%), radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.04), transparent 60%), var(--ryco-bg-base);
-    --ryco-bg-secondary: rgba(255, 255, 255, 0.5);
-    --ryco-bg-tertiary: rgba(255, 255, 255, 0.75);
-    --ryco-bg-elevated: rgba(255, 255, 255, 0.9);
+    --ryco-bg-base: #eaeff5;
+    --ryco-bg-primary: radial-gradient(circle at 20% -10%, rgba(59, 130, 246, 0.25), transparent 60%), radial-gradient(circle at 90% 90%, rgba(6, 182, 212, 0.2), transparent 50%), radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.1), transparent 60%), var(--ryco-bg-base);
+    --ryco-bg-secondary: rgba(255, 255, 255, 0.4);
+    --ryco-bg-tertiary: rgba(255, 255, 255, 0.65);
+    --ryco-bg-elevated: rgba(255, 255, 255, 0.95);
 
-    --ryco-border-subtle: rgba(255, 255, 255, 0.7);
-    --ryco-border-default: rgba(255, 255, 255, 1);
-    --ryco-border-strong: rgba(0, 0, 0, 0.1);
+    --ryco-border-subtle: rgba(0, 0, 0, 0.04);
+    --ryco-border-default: rgba(0, 0, 0, 0.08);
+    --ryco-border-strong: rgba(0, 0, 0, 0.16);
 
-    --ryco-text-primary: rgba(15, 15, 20, 0.9);
-    --ryco-text-secondary: rgba(15, 15, 20, 0.65);
-    --ryco-text-tertiary: rgba(15, 15, 20, 0.45);
+    --ryco-text-primary: rgba(15, 15, 20, 0.95);
+    --ryco-text-secondary: rgba(15, 15, 20, 0.7);
+    --ryco-text-tertiary: rgba(15, 15, 20, 0.5);
 
     --ryco-accent: #3b82f6;
     --ryco-accent-hover: #2563eb;
