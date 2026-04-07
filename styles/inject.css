@@ -324,8 +324,9 @@
     min-width: 300px;
     max-width: 400px;
     padding: var(--ryco-space-3) var(--ryco-space-4);
-    background: var(--ryco-bg-elevated);
-    backdrop-filter: blur(12px);
+    background: var(--ryco-bg-glass);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
     border: 1px solid var(--ryco-border-default);
     border-radius: var(--ryco-radius-md);
     box-shadow: var(--ryco-shadow-lg);
