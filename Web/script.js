@@ -34,8 +34,6 @@ const ThemeManager = {
         
         // Listen for storage changes (sync across tabs)
         this.watchStorageChanges();
-        
-        console.log('Theme Manager initialized:', savedTheme);
     },
     
     /**
@@ -45,7 +43,6 @@ const ThemeManager = {
         try {
             return localStorage.getItem(this.STORAGE_KEY) || this.THEMES.AUTO;
         } catch (e) {
-            console.warn('Failed to read theme preference:', e);
             return this.THEMES.AUTO;
         }
     },
@@ -57,7 +54,7 @@ const ThemeManager = {
         try {
             localStorage.setItem(this.STORAGE_KEY, theme);
         } catch (e) {
-            console.warn('Failed to save theme preference:', e);
+            // Silent fail - localStorage may be disabled
         }
     },
     
@@ -118,7 +115,6 @@ const ThemeManager = {
             const savedTheme = this.getSavedTheme();
             // Only react if user is on auto mode
             if (savedTheme === this.THEMES.AUTO) {
-                console.log('System theme changed:', e.matches ? 'dark' : 'light');
                 // Trigger re-render by dispatching event
                 window.dispatchEvent(new CustomEvent('themechange', { 
                     detail: { 
@@ -137,7 +133,7 @@ const ThemeManager = {
             try {
                 darkModeQuery.addListener(handleThemeChange);
             } catch (err) {
-                console.warn('Unable to watch system theme changes:', err);
+                // Silent fail - theme watching not supported
             }
         }
     },
@@ -148,7 +144,6 @@ const ThemeManager = {
     watchStorageChanges() {
         window.addEventListener('storage', (e) => {
             if (e.key === this.STORAGE_KEY && e.newValue) {
-                console.log('Theme synced from another tab:', e.newValue);
                 this.applyTheme(e.newValue);
             }
         });
@@ -170,8 +165,6 @@ const ThemeManager = {
     setTheme(theme) {
         if (Object.values(this.THEMES).includes(theme)) {
             this.applyTheme(theme);
-        } else {
-            console.warn('Invalid theme:', theme);
         }
     }
 };
@@ -1025,10 +1018,9 @@ document.querySelectorAll('.feature-card, .model-provider, .doc-card, .step').fo
 // THEME CHANGE LISTENER
 // ============================================
 
-// Listen for theme changes and log them (can be extended for UI updates)
+// Listen for theme changes for UI updates
 window.addEventListener('themechange', (e) => {
-    console.log('Theme changed:', e.detail);
-    // You can add additional UI updates here if needed
+    // Additional UI updates can be added here if needed
     // For example, updating a theme toggle button state
 });
 
@@ -1038,7 +1030,3 @@ window.addEventListener('themechange', (e) => {
 
 // Make ThemeManager available globally for console access and debugging
 window.RycoTheme = ThemeManager;
-
-console.log('Ryco website loaded successfully');
-console.log('Theme system active. Current theme:', ThemeManager.getEffectiveTheme());
-console.log('Use RycoTheme.toggle() to switch themes or RycoTheme.setTheme("light"|"dark"|"auto")');
