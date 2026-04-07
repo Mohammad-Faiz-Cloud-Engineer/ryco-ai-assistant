@@ -1,0 +1,75 @@
+# Ryco AI Assistant - Git Ignore File
+
+# ========== Operating System Files ==========
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# ========== IDE and Editor Files ==========
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# ========== Node Modules (if added later) ==========
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ========== Build and Distribution ==========
+dist/
+build/
+*.zip
+*.crx
+*.pem
+
+# ========== Temporary Files ==========
+*.tmp
+*.temp
+*.log
+*.pid
+*.seed
+.cache/
+.temp/
+
+# ========== Test Coverage ==========
+coverage/
+.nyc_output/
+*.lcov
+
+# ========== Environment and Secrets ==========
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+credentials.json
+*adminsdk*.json
+
+# ========== Backup Files ==========
+*.bak
+*.orig
+*_backup.*
+*_old.*
+*_copy.*
+
+# ========== Nested Duplicate Folder ==========
+ryco-ai-assistant-main/
+
+# ========== Package Manager Locks (optional) ==========
+# Uncomment if using package managers
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
