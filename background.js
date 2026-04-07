@@ -16,6 +16,8 @@ const PERFORMANCE_CONFIG = {
 // ========== Security Constants ==========
 const MAX_RESPONSE_LENGTH = 50000; // Prevent memory exhaustion attacks
 const MAX_ERROR_MESSAGE_LENGTH = 200; // Prevent XSS via error messages
+const REQUEST_TIMEOUT = 60000; // 60 second timeout for API requests
+const STREAM_CHUNK_TIMEOUT = 30000; // 30 second timeout between chunks
 
 // ========== Crypto Utilities ==========
 const CRYPTO_KEY_NAME = 'ryco-encryption-key';
@@ -406,12 +408,26 @@ async function sendChatRequest(prompt, streamCallback) {
     presence_penalty: PERFORMANCE_CONFIG.PRESENCE_PENALTY
   };
   
+  let timeoutId = null;
+  let abortController = new AbortController();
+  
   try {
-    const response = await fetch(provider.endpoint, {
+    // Set up request timeout
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => {
+        abortController.abort();
+        reject(new Error('Request timeout - no response from server'));
+      }, REQUEST_TIMEOUT);
+    });
+    
+    const fetchPromise = fetch(provider.endpoint, {
       method: 'POST',
       headers,
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
+      signal: abortController.signal
     });
+    
+    const response = await Promise.race([fetchPromise, timeoutPromise]);
     
     const responseTime = performance.now() - startTime;
     console.log(`[${settings.activeProvider.toUpperCase()}] Response received in:`, responseTime.toFixed(2), 'ms');
@@ -432,11 +448,25 @@ async function sendChatRequest(prompt, streamCallback) {
     let chunkCount = 0;
     let firstChunkTime = null;
     let streamAborted = false;
+    let lastChunkTime = Date.now();
+    
+    // Set up chunk timeout
+    const chunkTimeoutCheck = setInterval(() => {
+      if (Date.now() - lastChunkTime > STREAM_CHUNK_TIMEOUT) {
+        console.error(`[${settings.activeProvider.toUpperCase()}] Stream timeout - no chunks received`);
+        streamAborted = true;
+        clearInterval(chunkTimeoutCheck);
+        reader.cancel().catch(() => {});
+      }
+    }, 5000);
     
     try {
       while (true) {
-        const { done, value } = await reader.read();
+        const readPromise = reader.read();
+        const { done, value } = await readPromise;
+        
         if (done) {
+          clearInterval(chunkTimeoutCheck);
           const totalTime = performance.now() - startTime;
           console.log(`[${settings.activeProvider.toUpperCase()}] Stream complete. Total chunks:`, chunkCount);
           console.log(`[${settings.activeProvider.toUpperCase()}] Total time:`, totalTime.toFixed(2), 'ms');
@@ -445,6 +475,12 @@ async function sendChatRequest(prompt, streamCallback) {
           }
           break;
         }
+        
+        if (streamAborted) {
+          throw new Error('Stream timeout');
+        }
+        
+        lastChunkTime = Date.now();
         
         if (!firstChunkTime) {
           firstChunkTime = performance.now() - startTime;
@@ -485,6 +521,7 @@ async function sendChatRequest(prompt, streamCallback) {
         }
       }
     } catch (error) {
+      clearInterval(chunkTimeoutCheck);
       // Ensure reader is released on error
       try {
         await reader.cancel();
@@ -492,16 +529,25 @@ async function sendChatRequest(prompt, streamCallback) {
         console.error(`[${settings.activeProvider.toUpperCase()}] Error canceling reader:`, cancelError);
       }
       throw error;
+    } finally {
+      clearInterval(chunkTimeoutCheck);
+      // Always clear timeout
+      if (timeoutId) clearTimeout(timeoutId);
     }
     
     // Release lock after loop completes
-    reader.releaseLock();
+    try {
+      reader.releaseLock();
+    } catch (e) {
+      // Already released
+    }
     
     console.log(`[${settings.activeProvider.toUpperCase()}] Full response length:`, fullResponse.length, 'characters');
     streamCallback('', true);
     return fullResponse;
     
   } catch (error) {
+    if (timeoutId) clearTimeout(timeoutId);
     console.error(`[${settings.activeProvider.toUpperCase()}] Request error:`, error);
     throw error;
   }
@@ -568,14 +614,28 @@ FORMAT: Plain text only. No markdown. No asterisks. No code fences. No brackets.
   console.log('[Gemini] Sending request to:', model);
   const startTime = performance.now();
   
+  let timeoutId = null;
+  let abortController = new AbortController();
+  
   try {
-    const response = await fetch(endpoint, {
+    // Set up request timeout
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => {
+        abortController.abort();
+        reject(new Error('Request timeout - no response from server'));
+      }, REQUEST_TIMEOUT);
+    });
+    
+    const fetchPromise = fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
+      signal: abortController.signal
     });
+    
+    const response = await Promise.race([fetchPromise, timeoutPromise]);
     
     const responseTime = performance.now() - startTime;
     console.log('[Gemini] Response received in:', responseTime.toFixed(2), 'ms');
@@ -595,11 +655,24 @@ FORMAT: Plain text only. No markdown. No asterisks. No code fences. No brackets.
     let chunkCount = 0;
     let firstChunkTime = null;
     let streamAborted = false;
+    let lastChunkTime = Date.now();
+    
+    // Set up chunk timeout
+    const chunkTimeoutCheck = setInterval(() => {
+      if (Date.now() - lastChunkTime > STREAM_CHUNK_TIMEOUT) {
+        console.error('[Gemini] Stream timeout - no chunks received');
+        streamAborted = true;
+        clearInterval(chunkTimeoutCheck);
+        reader.cancel().catch(() => {});
+      }
+    }, 5000);
     
     try {
       while (true) {
         const { done, value } = await reader.read();
+        
         if (done) {
+          clearInterval(chunkTimeoutCheck);
           const totalTime = performance.now() - startTime;
           console.log('[Gemini] Stream complete. Total chunks:', chunkCount);
           console.log('[Gemini] Total time:', totalTime.toFixed(2), 'ms');
@@ -608,6 +681,12 @@ FORMAT: Plain text only. No markdown. No asterisks. No code fences. No brackets.
           }
           break;
         }
+        
+        if (streamAborted) {
+          throw new Error('Stream timeout');
+        }
+        
+        lastChunkTime = Date.now();
         
         if (!firstChunkTime) {
           firstChunkTime = performance.now() - startTime;
@@ -671,6 +750,7 @@ FORMAT: Plain text only. No markdown. No asterisks. No code fences. No brackets.
         }
       }
     } catch (error) {
+      clearInterval(chunkTimeoutCheck);
       // Ensure reader is released on error
       try {
         await reader.cancel();
@@ -678,16 +758,24 @@ FORMAT: Plain text only. No markdown. No asterisks. No code fences. No brackets.
         console.error('[Gemini] Error canceling reader:', cancelError);
       }
       throw error;
+    } finally {
+      clearInterval(chunkTimeoutCheck);
+      if (timeoutId) clearTimeout(timeoutId);
     }
     
     // Release lock after loop completes
-    reader.releaseLock();
+    try {
+      reader.releaseLock();
+    } catch (e) {
+      // Already released
+    }
     
     console.log('[Gemini] Full response length:', fullResponse.length, 'characters');
     streamCallback('', true);
     return fullResponse;
     
   } catch (error) {
+    if (timeoutId) clearTimeout(timeoutId);
     console.error('[Gemini] Request error:', error);
     throw error;
   }
@@ -811,27 +899,51 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           }
           
           let streamFailed = false;
-          const fullResponse = await sendChatRequest(
-            message.prompt,
-            (chunk, isDone) => {
+          let chunksSent = 0;
+          
+          try {
+            const fullResponse = await sendChatRequest(
+              message.prompt,
+              (chunk, isDone) => {
+                // Validate tab still exists before sending
+                if (streamFailed) return;
+                
+                chrome.tabs.sendMessage(sender.tab.id, {
+                  type: 'RYCO_STREAM_CHUNK',
+                  chunk,
+                  isDone,
+                  requestId: message.requestId
+                }).then(() => {
+                  if (chunk) chunksSent++;
+                }).catch(err => {
+                  console.error('[Ryco] Failed to send chunk:', err);
+                  streamFailed = true;
+                });
+              }
+            );
+            
+            if (streamFailed) {
+              return { success: false, error: 'Stream interrupted - tab may have closed' };
+            }
+            
+            if (chunksSent === 0 && (!fullResponse || fullResponse.length === 0)) {
+              return { success: false, error: 'No response received from AI provider' };
+            }
+            
+            return { success: true, response: fullResponse };
+          } catch (error) {
+            // Send error notification to content script if possible
+            if (!streamFailed && sender.tab?.id) {
               chrome.tabs.sendMessage(sender.tab.id, {
-                type: 'RYCO_STREAM_CHUNK',
-                chunk,
-                isDone,
+                type: 'RYCO_ERROR',
+                error: sanitizeErrorMessage(error.message),
                 requestId: message.requestId
-              }).catch(err => {
-                console.error('[Ryco] Failed to send chunk:', err);
-                streamFailed = true;
-                // Tab likely closed - abort stream
+              }).catch(() => {
+                // Tab closed, ignore
               });
             }
-          );
-          
-          if (streamFailed) {
-            return { success: false, error: 'Stream interrupted - tab may have closed' };
+            throw error;
           }
-          
-          return { success: true, response: fullResponse };
         }
         
         case 'RYCO_TEST_CONNECTION': {
