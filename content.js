@@ -148,8 +148,8 @@
         toast.innerHTML = `
       <div class="ryco-toast-icon">${ICONS[type] || ICONS.info}</div>
       <div class="ryco-toast-content">
-        <div class="ryco-toast-title">${title}</div>
-        <div class="ryco-toast-message">${message}</div>
+        <div class="ryco-toast-title">${escapeHtml(title)}</div>
+        <div class="ryco-toast-message">${escapeHtml(message)}</div>
       </div>
       <button class="ryco-toast-close">${ICONS.close}</button>
     `;
