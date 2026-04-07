@@ -188,8 +188,8 @@ Created by **Mohammad Faiz**
 
 ### Multi-Provider Support
 - **NVIDIA NIM** - 15+ models including DeepSeek-R1, Mistral Large, GPT-OSS
-- **Google Gemini** - Gemini 3 Pro Preview, Gemini 3 Flash Preview, Gemini Flash Latest
-- **OpenAI** - GPT-4o, GPT-4 Turbo, GPT-3.5 Turbo
+- **Google Gemini** - Gemini 3.1 Pro Preview, Gemini 3.1 Flash Preview, Gemini Flash Latest
+- **OpenAI** - GPT-4o, GPT-5 series, GPT-4 Turbo
 
 ### Universal Compatibility
 - Works on **any website** with text input
@@ -257,15 +257,20 @@ Created by **Mohammad Faiz**
 - DeepSeek-R1, DeepSeek-V3 series
 - Mistral Large, Mistral Small, Mixtral series
 
-### Google Gemini (4 Models)
-- Gemini 3 Pro Preview
-- Gemini 3 Flash Preview
+### Google Gemini (5 Models)
+- Gemini 3.1 Pro Preview
+- Gemini 3.1 Flash Preview
+- Gemini 3.1 Flash Lite Preview
 - Gemini Flash Latest
 - Gemini Flash Lite Latest
 
-### OpenAI (4 Models)
+### OpenAI (8 Models)
 - GPT-4o
 - GPT-4o Mini
+- GPT-5.2
+- GPT-5.3 Instant
+- GPT-5.4 Thinking
+- GPT-5.4 Pro
 - GPT-4 Turbo
 - GPT-3.5 Turbo
 
@@ -689,8 +694,8 @@ Ryco v1.6.0 makes everything smoother, safer, and more reliable!
   - Mistral Large, Mistral Small, Mixtral series
   - OpenAI GPT-OSS (120B, 20B)
   - Meta Llama 3.1 series
-  - Google Gemini 3 Pro Preview, Gemini 3 Flash Preview
-  - OpenAI GPT-4o, GPT-4 Turbo, GPT-3.5 Turbo
+  - Google Gemini 3.1 Pro Preview, Gemini 3.1 Flash Preview
+  - OpenAI GPT-4o, GPT-5 series, GPT-4 Turbo
 - Universal trigger system (@Ryco prompt//)
 - Works on any website with text input
 - Support for standard inputs, textareas, and rich text editors
