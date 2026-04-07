@@ -22,7 +22,7 @@
 
 ## Quick Start
 
-**🌐 Visit our website:** [https://mohammad-faiz-cloud-engineer.github.io/ryco-ai-assistant/](https://mohammad-faiz-cloud-engineer.github.io/ryco-ai-assistant/)
+Visit our website: [https://mohammad-faiz-cloud-engineer.github.io/ryco-ai-assistant/](https://mohammad-faiz-cloud-engineer.github.io/ryco-ai-assistant/)
 
 ```bash
 # Clone the repository
@@ -215,17 +215,22 @@ Get your free API keys from:
 - `mistralai/mixtral-8x7b-instruct-v0.1` - MoE model
 - `mistralai/mixtral-8x22b-instruct-v0.1` - Large MoE
 
-### Google Gemini (4 Models)
-- `gemini-3-pro-preview` - Most intelligent with SOTA reasoning
-- `gemini-3-flash-preview` - Fast with frontier intelligence
+### Google Gemini (5 Models)
+- `gemini-3.1-pro-preview` - Most intelligent with SOTA reasoning
+- `gemini-3.1-flash-preview` - Fast with frontier intelligence
+- `gemini-3.1-flash-lite-preview` - Cost-efficient option
 - `gemini-flash-latest` - Latest Flash model (auto-updates)
 - `gemini-flash-lite-latest` - Lightweight, cost-effective
 
-### OpenAI (4 Models)
-- `gpt-4o` - Most capable
+### OpenAI (8 Models)
+- `gpt-4o` - Most capable (still available in API)
 - `gpt-4o-mini` - Fast and efficient
-- `gpt-4-turbo` - Advanced reasoning
-- `gpt-3.5-turbo` - Fast and affordable
+- `gpt-5.2` - Latest default model
+- `gpt-5.3-instant` - Fast variant
+- `gpt-5.4-thinking` - Advanced reasoning
+- `gpt-5.4-pro` - Premium model
+- `gpt-4-turbo` - Legacy advanced reasoning
+- `gpt-3.5-turbo` - Legacy fast and affordable
 
 ## Configuration
 
@@ -320,23 +325,23 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Contact & Support
 
-- **🌐 Website**: [https://mohammad-faiz-cloud-engineer.github.io/ryco-ai-assistant/](https://mohammad-faiz-cloud-engineer.github.io/ryco-ai-assistant/)
-- **Issues**: [GitHub Issues](https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant/discussions)
-- **GitHub**: [@Mohammad-Faiz-Cloud-Engineer](https://github.com/Mohammad-Faiz-Cloud-Engineer)
+- Website: [https://mohammad-faiz-cloud-engineer.github.io/ryco-ai-assistant/](https://mohammad-faiz-cloud-engineer.github.io/ryco-ai-assistant/)
+- Issues: [GitHub Issues](https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant/issues)
+- Discussions: [GitHub Discussions](https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant/discussions)
+- GitHub: [@Mohammad-Faiz-Cloud-Engineer](https://github.com/Mohammad-Faiz-Cloud-Engineer)
 
 ## Roadmap
 
-- [ ] Firefox extension support
-- [ ] Safari extension support
-- [ ] Custom model endpoints
-- [ ] Conversation history
-- [ ] Prompt templates
-- [ ] Team collaboration features
-- [ ] Chrome Web Store publication
-- [ ] Multi-language support
-- [ ] Voice input support
-- [ ] Custom keyboard shortcuts
+- Firefox extension support
+- Safari extension support
+- Custom model endpoints
+- Conversation history
+- Prompt templates
+- Team collaboration features
+- Chrome Web Store publication
+- Multi-language support
+- Voice input support
+- Custom keyboard shortcuts
 
 ## Repository Stats
 
@@ -354,7 +359,7 @@ If you find Ryco useful, please consider giving it a star on GitHub!
 
 **Made with care by Mohammad Faiz**
 
-🌐 [Official Website](https://mohammad-faiz-cloud-engineer.github.io/ryco-ai-assistant/) | 📦 [GitHub Repository](https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant) | 📖 [Documentation](INSTALL.md)
+[Official Website](https://mohammad-faiz-cloud-engineer.github.io/ryco-ai-assistant/) | [GitHub Repository](https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant) | [Documentation](INSTALL.md)
 
 [Back to Top](#ryco---multi-llm-ai-assistant-browser-extension)
 
