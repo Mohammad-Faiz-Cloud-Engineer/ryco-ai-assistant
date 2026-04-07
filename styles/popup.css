@@ -242,13 +242,18 @@ body.light .icon-light {
 }
 
 .ryco-tab:hover {
-    color: var(--ryco-text-secondary);
+    color: var(--ryco-text-primary);
     background: var(--ryco-bg-tertiary);
+}
+
+.ryco-tab:active {
+    transform: scale(0.96);
 }
 
 .ryco-tab.active {
     color: var(--ryco-accent);
     background: var(--ryco-accent-subtle);
+    box-shadow: inset 0 0 0 1px var(--ryco-accent-subtle);
 }
 
 /* ========== Content ========== */
@@ -258,12 +263,24 @@ body.light .icon-light {
     max-height: 380px;
 }
 
+@keyframes panelFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.99);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
 .ryco-panel {
     display: none;
 }
 
 .ryco-panel.active {
     display: block;
+    animation: panelFadeIn 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 .ryco-section {
@@ -289,6 +306,17 @@ body.light .icon-light {
     border: 1px solid var(--ryco-border-subtle);
     border-radius: var(--ryco-radius-lg);
     margin-bottom: var(--ryco-space-3);
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.ryco-provider-card:hover {
+    border-color: var(--ryco-border-strong);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px 0 rgba(0, 0, 0, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+}
+
+body.light .ryco-provider-card:hover {
+    box-shadow: 0 12px 32px 0 rgba(0, 0, 0, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
 }
 
 .ryco-provider-header {
@@ -426,18 +454,24 @@ body.light .icon-light {
     font-size: var(--ryco-font-size-sm);
     font-weight: 500;
     cursor: pointer;
-    transition: all var(--ryco-transition-fast);
+    transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
     white-space: nowrap;
+}
+
+.ryco-btn:active:not(:disabled) {
+    transform: scale(0.96);
 }
 
 .ryco-btn-primary {
     background: var(--ryco-accent);
     color: white;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
 }
 
 .ryco-btn-primary:hover {
     background: var(--ryco-accent-hover);
     transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
 }
 
 .ryco-btn-secondary {
@@ -513,12 +547,14 @@ body.light .icon-light {
 
 .ryco-radio-card:hover .ryco-radio-content {
     background: var(--ryco-bg-tertiary);
+    border-color: var(--ryco-border-strong);
 }
 
 .ryco-radio-card input:checked+.ryco-radio-content {
     background: var(--ryco-accent-subtle);
     border-color: var(--ryco-accent);
     color: var(--ryco-accent);
+    box-shadow: 0 0 0 1px var(--ryco-accent) inset, 0 4px 16px rgba(99, 102, 241, 0.15);
 }
 
 /* ========== Model Section ========== */
@@ -622,7 +658,7 @@ body.light .icon-light {
 
 /* ========== Scrollbar ========== */
 ::-webkit-scrollbar {
-    width: 6px;
+    width: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -630,12 +666,12 @@ body.light .icon-light {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--ryco-bg-tertiary);
-    border-radius: 3px;
+    background: rgba(150, 150, 150, 0.2);
+    border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--ryco-border-strong);
+    background: rgba(150, 150, 150, 0.4);
 }
 
 /* ========== User Details Tab ========== */
