@@ -41,17 +41,18 @@
 
 /* Dark Theme */
 body {
-    --ryco-bg-primary: #0f0f14;
-    --ryco-bg-secondary: #1a1a24;
-    --ryco-bg-tertiary: #25252f;
-    --ryco-bg-elevated: #2a2a36;
+    --ryco-bg-base: #0a0a0f;
+    --ryco-bg-primary: radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08), transparent 35%), radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.05), transparent 35%), var(--ryco-bg-base);
+    --ryco-bg-secondary: rgba(25, 25, 36, 0.45);
+    --ryco-bg-tertiary: rgba(35, 35, 47, 0.5);
+    --ryco-bg-elevated: rgba(45, 45, 60, 0.65);
 
     --ryco-border-subtle: rgba(255, 255, 255, 0.06);
     --ryco-border-default: rgba(255, 255, 255, 0.1);
-    --ryco-border-strong: rgba(255, 255, 255, 0.15);
+    --ryco-border-strong: rgba(255, 255, 255, 0.18);
 
     --ryco-text-primary: rgba(255, 255, 255, 0.95);
-    --ryco-text-secondary: rgba(255, 255, 255, 0.65);
+    --ryco-text-secondary: rgba(255, 255, 255, 0.7);
     --ryco-text-tertiary: rgba(255, 255, 255, 0.45);
 
     --ryco-accent: #6366f1;
@@ -65,18 +66,19 @@ body {
 
 /* Light Theme */
 body.light {
-    --ryco-bg-primary: #ffffff;
-    --ryco-bg-secondary: #f5f5fa;
-    --ryco-bg-tertiary: #ebebf0;
-    --ryco-bg-elevated: #ffffff;
+    --ryco-bg-base: #f4f4f8;
+    --ryco-bg-primary: radial-gradient(circle at 15% 50%, rgba(79, 70, 229, 0.06), transparent 35%), radial-gradient(circle at 85% 30%, rgba(5, 150, 105, 0.04), transparent 35%), var(--ryco-bg-base);
+    --ryco-bg-secondary: rgba(255, 255, 255, 0.6);
+    --ryco-bg-tertiary: rgba(255, 255, 255, 0.85);
+    --ryco-bg-elevated: rgba(255, 255, 255, 0.95);
 
-    --ryco-border-subtle: rgba(0, 0, 0, 0.05);
-    --ryco-border-default: rgba(0, 0, 0, 0.1);
-    --ryco-border-strong: rgba(0, 0, 0, 0.15);
+    --ryco-border-subtle: rgba(255, 255, 255, 0.7);
+    --ryco-border-default: rgba(255, 255, 255, 1);
+    --ryco-border-strong: rgba(0, 0, 0, 0.1);
 
-    --ryco-text-primary: rgba(0, 0, 0, 0.9);
-    --ryco-text-secondary: rgba(0, 0, 0, 0.6);
-    --ryco-text-tertiary: rgba(0, 0, 0, 0.4);
+    --ryco-text-primary: rgba(15, 15, 20, 0.9);
+    --ryco-text-secondary: rgba(15, 15, 20, 0.65);
+    --ryco-text-tertiary: rgba(15, 15, 20, 0.45);
 
     --ryco-accent: #4f46e5;
     --ryco-accent-hover: #6366f1;
@@ -88,9 +90,44 @@ body {
     font-size: var(--ryco-font-size-base);
     color: var(--ryco-text-primary);
     background: var(--ryco-bg-primary);
+    background-attachment: fixed;
     width: 380px;
     min-height: 520px;
     overflow-x: hidden;
+    position: relative;
+}
+
+/* Glassmorphism Sub-styles */
+.ryco-header,
+.ryco-tabs,
+.ryco-provider-card,
+.ryco-input,
+.ryco-btn-secondary,
+.ryco-radio-content,
+.ryco-model-card,
+.ryco-select,
+.ryco-tip-card,
+.ryco-footer,
+.ryco-field-group,
+.ryco-textarea,
+.ryco-info-box {
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+}
+
+.ryco-provider-card,
+.ryco-field-group,
+.ryco-info-box,
+.ryco-tip-card {
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+}
+
+body.light .ryco-provider-card,
+body.light .ryco-field-group,
+body.light .ryco-info-box,
+body.light .ryco-tip-card {
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05), inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 /* ========== Header ========== */
