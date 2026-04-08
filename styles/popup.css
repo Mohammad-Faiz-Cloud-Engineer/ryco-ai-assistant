@@ -576,6 +576,12 @@ body.light .ryco-provider-card:hover {
     border: 1px solid var(--ryco-border-subtle);
     border-radius: var(--ryco-radius-md);
     margin-bottom: var(--ryco-space-2);
+    position: relative;
+    z-index: 1;
+}
+
+.ryco-model-card:has(.ryco-select.open) {
+    z-index: 200;
 }
 
 .ryco-model-card h4 {
@@ -585,7 +591,18 @@ body.light .ryco-provider-card:hover {
     margin-bottom: var(--ryco-space-2);
 }
 
+/* ========== Custom Dropdown ========== */
 .ryco-select {
+    position: relative;
+    width: 100%;
+    z-index: 10;
+}
+
+.ryco-select.open {
+    z-index: 300;
+}
+
+.ryco-select-trigger {
     width: 100%;
     padding: var(--ryco-space-2) var(--ryco-space-3);
     background: var(--ryco-bg-tertiary);
@@ -594,78 +611,196 @@ body.light .ryco-provider-card:hover {
     font-family: var(--ryco-font-family);
     font-size: var(--ryco-font-size-sm);
     color: var(--ryco-text-primary);
-    outline: none;
     cursor: pointer;
     transition: all var(--ryco-transition-base);
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
     backdrop-filter: blur(16px) saturate(180%);
     -webkit-backdrop-filter: blur(16px) saturate(180%);
     box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.1), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
-    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23b4b8c5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right var(--ryco-space-3) center;
-    padding-right: calc(var(--ryco-space-3) * 3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ryco-space-2);
+    user-select: none;
+    position: relative;
+    z-index: 1;
 }
 
-body.light .ryco-select {
+body.light .ryco-select-trigger {
     box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.03), inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
-    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 
-.ryco-select:hover {
+.ryco-select-trigger:hover {
     background-color: var(--ryco-bg-elevated);
     border-color: var(--ryco-border-strong);
     transform: translateY(-1px);
     box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.15), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
 }
 
-body.light .ryco-select:hover {
+body.light .ryco-select-trigger:hover {
     box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.05), inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
 }
 
-.ryco-select:focus {
+.ryco-select.open .ryco-select-trigger {
     border-color: var(--ryco-accent);
     box-shadow: 0 0 0 3px var(--ryco-accent-subtle), 0 8px 24px 0 rgba(59, 130, 246, 0.2);
     transform: translateY(-1px);
 }
 
-/* Style dropdown options with glassmorphic design */
-.ryco-select option {
-    background-color: rgba(26, 26, 36, 0.95);
-    color: var(--ryco-text-primary);
+.ryco-select-value {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ryco-select-arrow {
+    width: 12px;
+    height: 12px;
+    transition: transform var(--ryco-transition-base);
+    flex-shrink: 0;
+}
+
+.ryco-select-arrow svg {
+    width: 100%;
+    height: 100%;
+    stroke: var(--ryco-text-secondary);
+}
+
+.ryco-select.open .ryco-select-arrow {
+    transform: rotate(180deg);
+}
+
+/* Dropdown Menu */
+.ryco-select-dropdown {
+    position: absolute;
+    top: calc(100% + var(--ryco-space-1));
+    left: 0;
+    right: 0;
+    background: radial-gradient(circle at 20% -10%, rgba(59, 130, 246, 0.25), transparent 50%), 
+                radial-gradient(circle at 90% 90%, rgba(6, 182, 212, 0.18), transparent 50%), 
+                radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.08), transparent 60%), 
+                rgba(26, 26, 36, 0.98);
+    border: 1px solid var(--ryco-border-strong);
+    border-radius: var(--ryco-radius-md);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    box-shadow: 0 12px 32px 0 rgba(0, 0, 0, 0.3), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+    max-height: 240px;
+    overflow-y: auto;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px) scale(0.98);
+    transition: all var(--ryco-transition-base);
+    pointer-events: none;
+}
+
+body.light .ryco-select-dropdown {
+    background: radial-gradient(circle at 20% -10%, rgba(59, 130, 246, 0.28), transparent 60%), 
+                radial-gradient(circle at 90% 90%, rgba(6, 182, 212, 0.22), transparent 50%), 
+                radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.12), transparent 60%), 
+                rgba(255, 255, 255, 0.98);
+    box-shadow: 0 12px 32px 0 rgba(0, 0, 0, 0.12), inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+}
+
+.ryco-select.open .ryco-select-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+/* Dropdown Options */
+.ryco-select-option {
     padding: var(--ryco-space-2) var(--ryco-space-3);
-    border-radius: var(--ryco-radius-sm);
-    backdrop-filter: blur(16px) saturate(180%);
+    cursor: pointer;
+    transition: all var(--ryco-transition-fast);
+    font-size: var(--ryco-font-size-sm);
+    color: rgba(255, 255, 255, 0.9);
+    position: relative;
+    overflow: hidden;
 }
 
-/* Dark theme dropdown options */
-body:not(.light) .ryco-select option {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(6, 182, 212, 0.05));
-    background-color: rgba(26, 26, 36, 0.95);
-    color: rgba(255, 255, 255, 0.95);
+body.light .ryco-select-option {
+    color: rgba(15, 15, 20, 0.9);
 }
 
-body:not(.light) .ryco-select option:hover,
-body:not(.light) .ryco-select option:checked {
+.ryco-select-option::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(6, 182, 212, 0.1));
-    background-color: rgba(37, 37, 47, 0.95);
-    color: #ffffff;
+    opacity: 0;
+    transition: opacity var(--ryco-transition-fast);
+    z-index: -1;
 }
 
-/* Light theme dropdown options */
-body.light .ryco-select option {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(6, 182, 212, 0.03));
-    background-color: rgba(255, 255, 255, 0.95);
-    color: rgba(15, 15, 20, 0.95);
+body.light .ryco-select-option::before {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(6, 182, 212, 0.06));
 }
 
-body.light .ryco-select option:hover,
-body.light .ryco-select option:checked {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(6, 182, 212, 0.08));
-    background-color: rgba(241, 243, 245, 0.95);
-    color: rgba(15, 15, 20, 0.95);
+.ryco-select-option:hover::before {
+    opacity: 1;
+}
+
+.ryco-select-option:hover {
+    color: rgba(255, 255, 255, 1);
+    background: rgba(37, 37, 47, 0.6);
+}
+
+body.light .ryco-select-option:hover {
+    color: rgba(15, 15, 20, 1);
+    background: rgba(241, 243, 245, 0.8);
+}
+
+.ryco-select-option.selected {
+    color: #60a5fa;
+    background: rgba(59, 130, 246, 0.18);
+    font-weight: 600;
+}
+
+body.light .ryco-select-option.selected {
+    color: #2563eb;
+    background: rgba(59, 130, 246, 0.15);
+}
+
+.ryco-select-option.selected::before {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(6, 182, 212, 0.18));
+    opacity: 1;
+}
+
+body.light .ryco-select-option.selected::before {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(6, 182, 212, 0.12));
+}
+
+/* Scrollbar for dropdown */
+.ryco-select-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+
+.ryco-select-dropdown::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.ryco-select-dropdown::-webkit-scrollbar-thumb {
+    background: var(--ryco-border-default);
+    border-radius: 3px;
+}
+
+.ryco-select-dropdown::-webkit-scrollbar-thumb:hover {
+    background: var(--ryco-border-strong);
+}
+
+/* Hide native select */
+.ryco-select select {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    height: 0;
 }
 
 /* ========== Divider ========== */
