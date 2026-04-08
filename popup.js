@@ -240,25 +240,111 @@ function renderModelSelectors() {
 
         card.innerHTML = `
       <h4>${escapeHtml(provider.name)} Model</h4>
-      <select class="ryco-select" data-provider="${escapeHtml(key)}">
-        ${provider.models.map(model => `
-          <option value="${escapeHtml(model)}" ${model === selectedModel ? 'selected' : ''}>
-            ${escapeHtml(model)}
-          </option>
-        `).join('')}
-      </select>
+      <div class="ryco-select" data-provider="${escapeHtml(key)}">
+        <div class="ryco-select-trigger">
+          <span class="ryco-select-value">${escapeHtml(selectedModel)}</span>
+          <span class="ryco-select-arrow">
+            <svg viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </div>
+        <div class="ryco-select-dropdown">
+          ${provider.models.map(model => `
+            <div class="ryco-select-option ${model === selectedModel ? 'selected' : ''}" data-value="${escapeHtml(model)}">
+              ${escapeHtml(model)}
+            </div>
+          `).join('')}
+        </div>
+        <select style="display: none;">
+          ${provider.models.map(model => `
+            <option value="${escapeHtml(model)}" ${model === selectedModel ? 'selected' : ''}>
+              ${escapeHtml(model)}
+            </option>
+          `).join('')}
+        </select>
+      </div>
     `;
-
-        const select = card.querySelector('select');
-        if (select) {
-            select.addEventListener('change', (e) => {
-                settings.selectedModels[key] = e.target.value;
-                saveSettings({ selectedModels: settings.selectedModels });
-            });
-        }
 
         elements.modelSection.appendChild(card);
     }
+    
+    // Initialize custom dropdowns
+    initCustomDropdowns();
+}
+
+// ========== Custom Dropdown Functionality ==========
+function initCustomDropdowns() {
+    const dropdowns = document.querySelectorAll('.ryco-select');
+    
+    dropdowns.forEach(dropdown => {
+        const trigger = dropdown.querySelector('.ryco-select-trigger');
+        const dropdownMenu = dropdown.querySelector('.ryco-select-dropdown');
+        const options = dropdown.querySelectorAll('.ryco-select-option');
+        const valueDisplay = dropdown.querySelector('.ryco-select-value');
+        const hiddenSelect = dropdown.querySelector('select');
+        const provider = dropdown.dataset.provider;
+        
+        if (!trigger || !dropdownMenu || !valueDisplay || !hiddenSelect) return;
+        
+        // Toggle dropdown
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            
+            // Close other dropdowns
+            document.querySelectorAll('.ryco-select.open').forEach(other => {
+                if (other !== dropdown) {
+                    other.classList.remove('open');
+                }
+            });
+            
+            dropdown.classList.toggle('open');
+        });
+        
+        // Handle option selection
+        options.forEach(option => {
+            option.addEventListener('click', (e) => {
+                e.stopPropagation();
+                
+                const value = option.dataset.value;
+                
+                // Update UI
+                options.forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                valueDisplay.textContent = value;
+                
+                // Update hidden select
+                hiddenSelect.value = value;
+                
+                // Update settings
+                if (provider) {
+                    settings.selectedModels[provider] = value;
+                    saveSettings({ selectedModels: settings.selectedModels });
+                }
+                
+                // Close dropdown
+                dropdown.classList.remove('open');
+            });
+        });
+    });
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.ryco-select')) {
+            document.querySelectorAll('.ryco-select.open').forEach(dropdown => {
+                dropdown.classList.remove('open');
+            });
+        }
+    });
+    
+    // Close dropdowns on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.ryco-select.open').forEach(dropdown => {
+                dropdown.classList.remove('open');
+            });
+        }
+    });
 }
 
 // ========== API Key Management ==========
