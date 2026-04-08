@@ -567,6 +567,51 @@ Thank you for contributing to Ryco!`,
 
 All notable changes to Ryco will be documented in this file.
 
+## [1.9.0] - 2026-04-08
+
+### Bug Fixes & Improvements
+
+Minor release focused on stability and user experience.
+
+### Fixed
+- Fixed theme detection glitches
+- Fixed minor UI rendering issues
+- Resolved performance bottlenecks in theme system
+- Fixed various edge cases and minor bugs
+
+### Improved
+- Enhanced extension menu UI/UX
+- Better performance across all components
+- Smoother theme transitions
+- Cleaner codebase with improved maintainability
+
+## [1.8.0] - 2026-04-08
+
+### Model Updates
+
+Google deprecated their Gemini 3.0 models in March, so we've updated to the 3.1 series. If you were using Gemini 3 Pro or Flash, the extension will now use the 3.1 versions instead.
+
+OpenAI released GPT-5 in February. We've added support for GPT-5.2, GPT-5.3 Instant, GPT-5.4 Thinking, and GPT-5.4 Pro. GPT-4o is still available through the API even though it was removed from ChatGPT.
+
+NVIDIA NIM models remain unchanged.
+
+### Security Fixes
+- Fixed an XSS vulnerability in error message handling
+- Removed the overly broad host permission
+- Added response length limits to prevent memory exhaustion
+
+### Bug Fixes
+- Fixed memory leaks caused by event listeners not being removed
+- Fixed race conditions in stream processing
+- Fixed concurrent command bar cleanup issues
+- Fixed settings save operations that could overlap
+
+### Other Changes
+- Removed Google Fonts dependency
+- Removed debug logging from production code
+- Added comprehensive .gitignore file
+- Updated documentation
+
 ## [1.7.0] - 2026-02-04
 
 ### Copy Button & Reliability Update
