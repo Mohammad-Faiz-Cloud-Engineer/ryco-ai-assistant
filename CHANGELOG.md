@@ -5,6 +5,56 @@ All notable changes to Ryco will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2026-04-08
+
+### Bug Fixes & Improvements
+
+Minor release focused on stability and user experience.
+
+### Fixed
+- Fixed theme detection glitches
+- Fixed minor UI rendering issues
+- Resolved performance bottlenecks in theme system
+- Fixed various edge cases and minor bugs
+
+### Improved
+- Enhanced extension menu UI/UX
+- Better performance across all components
+- Smoother theme transitions
+- Cleaner codebase with improved maintainability
+
+## [1.8.0] - 2026-04-08
+
+### Model Updates
+
+Google deprecated their Gemini 3.0 models in March, so we've updated to the 3.1 series. If you were using Gemini 3 Pro or Flash, the extension will now use the 3.1 versions instead.
+
+OpenAI released GPT-5 in February. We've added support for GPT-5.2, GPT-5.3 Instant, GPT-5.4 Thinking, and GPT-5.4 Pro. GPT-4o is still available through the API even though it was removed from ChatGPT.
+
+NVIDIA NIM models remain unchanged.
+
+### Security Fixes
+- Fixed an XSS vulnerability in error message handling. Error messages from APIs are now properly escaped using HTML entities instead of character removal.
+- Removed the overly broad `<all_urls>` host permission. The extension now only requests access to the specific API endpoints it needs.
+- Added response length limits to prevent memory exhaustion from malicious API responses.
+
+### Bug Fixes
+- Fixed memory leaks caused by event listeners not being removed when DOM elements were deleted. This was particularly noticeable on single-page applications.
+- Fixed race conditions in stream processing where the reader lock could be released while still in use.
+- Fixed concurrent command bar cleanup that could cause errors when closing via multiple methods simultaneously.
+- Fixed settings save operations that could overlap and cause data loss when clicking rapidly.
+
+### Other Changes
+- Removed Google Fonts dependency. The extension now uses system fonts and works offline.
+- Removed debug logging from production code.
+- Added comprehensive .gitignore file.
+- Updated documentation to reflect current model availability.
+
+### Upgrade
+Pull the latest code and reload the extension in `chrome://extensions/`.
+
+Your settings and API keys will be preserved.
+
 ## [1.7.0] - 2026-02-04
 
 ### Copy Button & Reliability Update
