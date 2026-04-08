@@ -12,9 +12,9 @@
 [![GitHub Stars](https://img.shields.io/github/stars/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant?style=social)](https://github.com/Mohammad-Faiz-Cloud-Engineer/ryco-ai-assistant/stargazers)
 [![Website](https://img.shields.io/badge/Website-Live-brightgreen.svg)](https://mohammad-faiz-cloud-engineer.github.io/ryco-ai-assistant/)
 
-[🌐 Website](https://mohammad-faiz-cloud-engineer.github.io/ryco-ai-assistant/) • [Features](#features) • [Installation](#installation) • [Usage](#usage) • [API Keys](#api-keys) • [Models](#supported-models) • [Contributing](#contributing)
+[Website](https://mohammad-faiz-cloud-engineer.github.io/ryco-ai-assistant/) • [Features](#features) • [Installation](#installation) • [Usage](#usage) • [API Keys](#api-keys) • [Models](#supported-models) • [Contributing](#contributing)
 
-**[📖 Detailed Installation Guide](INSTALL.md)** | **[📝 Changelog](CHANGELOG.md)** | **[🌐 Official Website](https://mohammad-faiz-cloud-engineer.github.io/ryco-ai-assistant/)**
+**[Detailed Installation Guide](INSTALL.md)** | **[Changelog](CHANGELOG.md)** | **[Official Website](https://mohammad-faiz-cloud-engineer.github.io/ryco-ai-assistant/)**
 
 </div>
 
