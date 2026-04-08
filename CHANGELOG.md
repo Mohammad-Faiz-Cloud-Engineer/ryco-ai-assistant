@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.7.0] - 2026-02-04
 
-### 🎯 Copy Button & Reliability Update!
+### Copy Button & Reliability Update
 
 Ryco v1.7.0 brings the most requested feature plus rock-solid reliability improvements!
 
@@ -39,9 +39,9 @@ Ryco v1.7.0 brings the most requested feature plus rock-solid reliability improv
 
 ## [1.6.0] - 2026-02-01
 
-### 🛡️ Rock-Solid Quality Update!
+### Rock-Solid Quality Update
 
-Ryco v1.6.0 makes everything **smoother, safer, and more reliable**!
+Ryco v1.6.0 makes everything smoother, safer, and more reliable!
 
 ### What You'll Notice
 - **Buttery smooth dragging** - 60fps animations, no more stutters
