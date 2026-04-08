@@ -154,6 +154,12 @@ function applyTheme(theme) {
 
 // ========== Event Listeners ==========
 function setupEventListeners() {
+    // Validate elements exist before adding listeners
+    if (!elements.themeToggle || !elements.saveKeys || !elements.saveUserDetails) {
+        console.error('[Ryco] Critical DOM elements missing');
+        return;
+    }
+
     // Tab switching
     elements.tabs.forEach(tab => {
         tab.addEventListener('click', () => switchTab(tab.dataset.tab));
@@ -227,12 +233,31 @@ function escapeHtml(text) {
 
 // ========== Model Selectors ==========
 function renderModelSelectors() {
-    if (!elements.modelSection) return;
+    if (!elements.modelSection) {
+        console.warn('[Ryco] Model section element not found');
+        return;
+    }
     
-    // Clear existing content and listeners
+    // Clean up existing event listeners before clearing content
+    cleanupDropdownListeners();
+    
+    // Clear existing content
     elements.modelSection.innerHTML = '';
 
+    // Validate providers exist
+    if (!providers || Object.keys(providers).length === 0) {
+        console.warn('[Ryco] No providers available');
+        elements.modelSection.innerHTML = '<p style="color: var(--ryco-text-tertiary); text-align: center; padding: 20px;">No models available</p>';
+        return;
+    }
+
     for (const [key, provider] of Object.entries(providers)) {
+        // Validate provider structure
+        if (!provider || !provider.name || !Array.isArray(provider.models) || provider.models.length === 0) {
+            console.warn('[Ryco] Invalid provider structure:', key);
+            continue;
+        }
+
         const card = document.createElement('div');
         card.className = 'ryco-model-card';
 
@@ -256,7 +281,7 @@ function renderModelSelectors() {
             </div>
           `).join('')}
         </div>
-        <select style="display: none;">
+        <select style="display: none;" aria-hidden="true">
           ${provider.models.map(model => `
             <option value="${escapeHtml(model)}" ${model === selectedModel ? 'selected' : ''}>
               ${escapeHtml(model)}
@@ -274,7 +299,12 @@ function renderModelSelectors() {
 }
 
 // ========== Custom Dropdown Functionality ==========
+let dropdownEventListeners = []; // Track event listeners for cleanup
+
 function initCustomDropdowns() {
+    // Clean up existing event listeners to prevent memory leaks
+    cleanupDropdownListeners();
+    
     const dropdowns = document.querySelectorAll('.ryco-select');
     
     dropdowns.forEach(dropdown => {
@@ -285,10 +315,14 @@ function initCustomDropdowns() {
         const hiddenSelect = dropdown.querySelector('select');
         const provider = dropdown.dataset.provider;
         
-        if (!trigger || !dropdownMenu || !valueDisplay || !hiddenSelect) return;
+        // Validate all required elements exist
+        if (!trigger || !dropdownMenu || !valueDisplay || !hiddenSelect) {
+            console.warn('[Ryco] Missing dropdown elements for provider:', provider);
+            return;
+        }
         
-        // Toggle dropdown
-        trigger.addEventListener('click', (e) => {
+        // Toggle dropdown handler
+        const toggleHandler = (e) => {
             e.stopPropagation();
             
             // Close other dropdowns
@@ -299,14 +333,23 @@ function initCustomDropdowns() {
             });
             
             dropdown.classList.toggle('open');
-        });
+        };
+        
+        trigger.addEventListener('click', toggleHandler);
+        dropdownEventListeners.push({ element: trigger, event: 'click', handler: toggleHandler });
         
         // Handle option selection
         options.forEach(option => {
-            option.addEventListener('click', (e) => {
+            const optionHandler = (e) => {
                 e.stopPropagation();
                 
                 const value = option.dataset.value;
+                
+                // Validate value
+                if (!value || typeof value !== 'string') {
+                    console.error('[Ryco] Invalid option value:', value);
+                    return;
+                }
                 
                 // Update UI
                 options.forEach(opt => opt.classList.remove('selected'));
@@ -316,35 +359,56 @@ function initCustomDropdowns() {
                 // Update hidden select
                 hiddenSelect.value = value;
                 
-                // Update settings
-                if (provider) {
+                // Update settings with validation
+                if (provider && settings.selectedModels) {
                     settings.selectedModels[provider] = value;
                     saveSettings({ selectedModels: settings.selectedModels });
                 }
                 
                 // Close dropdown
                 dropdown.classList.remove('open');
-            });
+            };
+            
+            option.addEventListener('click', optionHandler);
+            dropdownEventListeners.push({ element: option, event: 'click', handler: optionHandler });
         });
     });
     
-    // Close dropdowns when clicking outside
-    document.addEventListener('click', (e) => {
+    // Close dropdowns when clicking outside (use capture phase for better performance)
+    const outsideClickHandler = (e) => {
         if (!e.target.closest('.ryco-select')) {
             document.querySelectorAll('.ryco-select.open').forEach(dropdown => {
                 dropdown.classList.remove('open');
             });
         }
-    });
+    };
+    
+    document.addEventListener('click', outsideClickHandler, true);
+    dropdownEventListeners.push({ element: document, event: 'click', handler: outsideClickHandler, capture: true });
     
     // Close dropdowns on Escape key
-    document.addEventListener('keydown', (e) => {
+    const escapeHandler = (e) => {
         if (e.key === 'Escape') {
             document.querySelectorAll('.ryco-select.open').forEach(dropdown => {
                 dropdown.classList.remove('open');
             });
         }
+    };
+    
+    document.addEventListener('keydown', escapeHandler);
+    dropdownEventListeners.push({ element: document, event: 'keydown', handler: escapeHandler });
+}
+
+/**
+ * Clean up dropdown event listeners to prevent memory leaks
+ */
+function cleanupDropdownListeners() {
+    dropdownEventListeners.forEach(({ element, event, handler, capture }) => {
+        if (element && handler) {
+            element.removeEventListener(event, handler, capture || false);
+        }
     });
+    dropdownEventListeners = [];
 }
 
 // ========== API Key Management ==========
